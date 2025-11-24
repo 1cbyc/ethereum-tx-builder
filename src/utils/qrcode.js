@@ -15,7 +15,7 @@ export function generateQRCode(text, size = 200) {
     // In production, you'd want to use a proper QR code library
     const encodedText = encodeURIComponent(text);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedText}`;
-    
+
     // Convert to data URL by fetching and converting
     fetch(qrUrl)
       .then(response => response.blob())
