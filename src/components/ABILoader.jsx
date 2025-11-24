@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormGroup, FormControl, Col, ControlLabel, Button, Panel } from 'react-bootstrap';
-import { parseABI, generateParameterFields } from '../abiParser';
+import { parseABI } from '../abiParser';
 
 /**
  * ABI Loader component for loading and parsing contract ABIs
@@ -13,7 +13,7 @@ class ABILoader extends React.Component {
       parsedFunctions: [],
       selectedFunction: null,
       error: null,
-      showFunctions: false
+      showFunctions: false,
     };
   }
 
@@ -51,7 +51,7 @@ class ABILoader extends React.Component {
             <FormControl
               componentClass="textarea"
               rows="4"
-              placeholder='Paste contract ABI JSON here, e.g., [{"type":"function","name":"setValue","inputs":[{"name":"value","type":"uint256"}],...}]'
+              placeholder="Paste contract ABI JSON here"
               onChange={this.handleABIChange}
             />
             {error && (
@@ -74,13 +74,29 @@ class ABILoader extends React.Component {
                     <Button
                       key={idx}
                       bsSize="small"
-                      bsStyle={selectedFunction && selectedFunction.signature === func.signature ? 'primary' : 'default'}
+                      bsStyle={
+                        selectedFunction && selectedFunction.signature === func.signature ?
+                          'primary' : 'default'
+                      }
                       onClick={() => this.handleFunctionSelect(func)}
-                      style={{ margin: '5px', display: 'block', width: '100%', textAlign: 'left' }}
+                      style={{
+                        margin: '5px',
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                      }}
                     >
                       <code>{func.signature}</code>
-                      {func.payable && <span className="label label-success" style={{ marginLeft: '10px' }}>payable</span>}
-                      {func.constant && <span className="label label-info" style={{ marginLeft: '5px' }}>view</span>}
+                      {func.payable && (
+                        <span className="label label-success" style={{ marginLeft: '10px' }}>
+                          payable
+                        </span>
+                      )}
+                      {func.constant && (
+                        <span className="label label-info" style={{ marginLeft: '5px' }}>
+                          view
+                        </span>
+                      )}
                     </Button>
                   ))}
                 </div>
@@ -92,6 +108,10 @@ class ABILoader extends React.Component {
     );
   }
 }
+
+ABILoader.propTypes = {
+  onFunctionSelect: React.PropTypes.func,
+};
 
 export default ABILoader;
 
