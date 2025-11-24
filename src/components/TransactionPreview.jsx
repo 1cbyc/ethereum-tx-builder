@@ -2,6 +2,7 @@ import React from 'react';
 import { Panel, Table, Label } from 'react-bootstrap';
 import Web3 from 'web3';
 import { calculateTransactionCost } from '../gasEstimator';
+import CopyButton from './CopyButton';
 
 const web3 = new Web3();
 
@@ -40,29 +41,33 @@ function TransactionPreview({ state }) {
             <tr>
               <td><strong>From</strong></td>
               <td>
-                <code>{state.address}</code>
-                <a
-                  href={`${explorerURL}/address/${state.address}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginLeft: '10px' }}
-                >
-                  View on Explorer
-                </a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <code>{state.address}</code>
+                  <CopyButton text={state.address} label="address" bsSize="small" />
+                  <a
+                    href={`${explorerURL}/address/${state.address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View on Explorer
+                  </a>
+                </div>
               </td>
             </tr>
             <tr>
               <td><strong>To</strong></td>
               <td>
-                <code>{targetAddress}</code>
-                <a
-                  href={`${explorerURL}/address/${targetAddress}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginLeft: '10px' }}
-                >
-                  {state.transactionType === 'eth' ? 'View Address' : 'View Contract'}
-                </a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <code>{targetAddress}</code>
+                  <CopyButton text={targetAddress} label="address" bsSize="small" />
+                  <a
+                    href={`${explorerURL}/address/${targetAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {state.transactionType === 'eth' ? 'View Address' : 'View Contract'}
+                  </a>
+                </div>
               </td>
             </tr>
             {state.transactionType === 'contract' && (
