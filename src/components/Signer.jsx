@@ -19,7 +19,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import { API } from "../etherscan";
 import { saveTransaction } from "../transactionHistory";
 import { getAddressFromPrivateKey, buildTx, calculateNonce, encodeDataPayload } from "../txbuilder";
-import { getDefaultNetwork } from "../networks";
+import { getDefaultNetwork, getNetworkById } from "../networks";
 import { validateAddress, validatePrivateKey, validateHex, validateGasLimit, validateFunctionSignature } from "../validation";
 import { estimateGasLimit, getGasPriceSuggestions, calculateTransactionCost } from "../gasEstimator";
 import Web3 from 'web3';
@@ -82,6 +82,9 @@ class Signer extends React.Component {
       gasPriceSuggestions: { slow: null, standard: null, fast: null },
       // Transaction preview
       showPreview: false,
+      // QR Code modals
+      showTxQRCode: false,
+      showAddressQRCode: false,
     });
   }
 
@@ -790,12 +793,33 @@ class Signer extends React.Component {
             <Col smOffset={2} sm={10}>
               <Alert bsStyle="success">
                 <strong>Transaction Sent!</strong>{' '}
-                <a target="_blank" href={`${state.explorerURL}/tx/${state.sentTxHash}`}>
-                  View on Explorer: {state.sentTxHash}
-                </a>
+                <div style={{ marginTop: '10px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <code style={{ fontSize: '12px' }}>{state.sentTxHash}</code>
+                  <CopyButton text={state.sentTxHash} label="transaction hash" bsSize="small" />
+                  <Button
+                    bsSize="small"
+                    onClick={() => {
+                      state.showTxQRCode = true;
+                    }}
+                  >
+                    QR
+                  </Button>
+                  <a target="_blank" href={`${state.explorerURL}/tx/${state.sentTxHash}`}>
+                    View on Explorer
+                  </a>
+                </div>
               </Alert>
             </Col>
           </FormGroup>
+        )}
+
+        {state.sentTxHash && (
+          <QRCodeModal
+            show={state.showTxQRCode || false}
+            onHide={() => { state.showTxQRCode = false; }}
+            data={state.sentTxHash}
+            title="Transaction Hash QR Code"
+          />
         )}
 
         {state.rawTx && <TransactionData state={state} />}
