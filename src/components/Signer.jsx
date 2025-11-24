@@ -111,6 +111,36 @@ class Signer extends React.Component {
     init();
   }
 
+  // Handle text changes in input fields
+  onChange(event) {
+    const { state } = this;
+    const name = event.target.id;
+    const value = event.target.value;
+
+    // Update state
+    state[name] = value;
+    // eslint-disable-next-line no-console
+    console.log('Updated', name, value);
+
+    // Validate field
+    this.validateField(name, value);
+
+    // Store to survive refresh
+    window.localStorage.setItem(name, value);
+
+    // Build preview if we have enough data
+    if (state.contractAddress && state.functionSignature &&
+        state.gasLimit && state.gasPrice) {
+      this.buildTransactionPreview();
+    }
+  }
+
+  // Handle private key edit
+  onPrivateKeyChange(event) {
+    this.onChange(event);
+    this.updateAddressData();
+  }
+
   // Update data about the address after fetched over API
   @action
   setAddressData(address, balance, nonce) {
@@ -397,30 +427,6 @@ class Signer extends React.Component {
     this.setAddressData(address, balance, nonce);
   }
 
-  // Handle text changes in input fields
-  onChange(event) {
-    const { state } = this;
-    const name = event.target.id;
-    const value = event.target.value;
-
-    // Update state
-    state[name] = value;
-    // eslint-disable-next-line no-console
-    console.log('Updated', name, value);
-
-    // Validate field
-    this.validateField(name, value);
-
-    // Store to survive refresh
-    window.localStorage.setItem(name, value);
-
-    // Build preview if we have enough data
-    if (state.contractAddress && state.functionSignature &&
-        state.gasLimit && state.gasPrice) {
-      this.buildTransactionPreview();
-    }
-  }
-
   // Build transaction preview
   @action
   buildTransactionPreview() {
@@ -452,12 +458,6 @@ class Signer extends React.Component {
       // Preview build failed, don't show error yet
       this.state.showPreview = false;
     }
-  }
-
-  // Handle private key edit
-  onPrivateKeyChange(event) {
-    this.onChange(event);
-    this.updateAddressData();
   }
 
   // Handle wallet selection from wallet manager
@@ -768,7 +768,9 @@ class Signer extends React.Component {
                     bsSize="small"
                     onClick={() => {
                       state.gasPrice = state.gasPriceSuggestions.slow;
-                      onChange({ target: { id: 'gasPrice', value: state.gasPriceSuggestions.slow } });
+                      onChange({
+                        target: { id: 'gasPrice', value: state.gasPriceSuggestions.slow },
+                      });
                     }}
                   >
                     Slow ({state.gasPriceSuggestions.slow
@@ -786,14 +788,17 @@ class Signer extends React.Component {
                     }}
                   >
                     Standard ({state.gasPriceSuggestions.standard
-                      ? `${(parseInt(state.gasPriceSuggestions.standard, 16) / 1e9).toFixed(2)} Gwei`
+                      ? `${(parseInt(state.gasPriceSuggestions.standard, 16) / 1e9)
+                        .toFixed(2)} Gwei`
                       : ''})
                   </Button>
                   <Button
                     bsSize="small"
                     onClick={() => {
                       state.gasPrice = state.gasPriceSuggestions.fast;
-                      onChange({ target: { id: 'gasPrice', value: state.gasPriceSuggestions.fast } });
+                      onChange({
+                        target: { id: 'gasPrice', value: state.gasPriceSuggestions.fast },
+                      });
                     }}
                   >
                     Fast ({state.gasPriceSuggestions.fast
