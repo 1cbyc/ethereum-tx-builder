@@ -826,6 +826,59 @@ class Signer extends React.Component {
 
         <AccountInfo state={state} />
 
+        {state.estimatingGas && (
+          <FormGroup>
+            <Col smOffset={2} sm={10}>
+              <LoadingSpinner text="Estimating gas..." />
+            </Col>
+          </FormGroup>
+        )}
+
+        {state.sendStatus && (
+          <FormGroup>
+            <Col smOffset={2} sm={10}>
+              <LoadingSpinner text="Sending transaction..." />
+            </Col>
+          </FormGroup>
+        )}
+
+        <div style={{ marginTop: '30px' }}>
+          <TemplateManager
+            currentConfig={{
+              network: state.selectedNetwork.id,
+              contractAddress: state.contractAddress,
+              recipientAddress: state.recipientAddress,
+              transactionType: state.transactionType,
+              functionSignature: state.functionSignature,
+              functionParameters: state.functionParameters,
+              gasLimit: state.gasLimit,
+              gasPrice: state.gasPrice,
+              value: state.value,
+            }}
+            onLoadTemplate={(config) => {
+              if (config.network) {
+                const network = getNetworkById(config.network) || getDefaultNetwork();
+                state.selectedNetwork = network;
+                state.apiURL = network.apiURL;
+                state.explorerURL = network.explorerURL;
+              }
+              if (config.contractAddress) state.contractAddress = config.contractAddress;
+              if (config.recipientAddress) state.recipientAddress = config.recipientAddress;
+              if (config.transactionType) state.transactionType = config.transactionType;
+              if (config.functionSignature) state.functionSignature = config.functionSignature;
+              if (config.functionParameters) state.functionParameters = config.functionParameters;
+              if (config.gasLimit) state.gasLimit = config.gasLimit;
+              if (config.gasPrice) state.gasPrice = config.gasPrice;
+              if (config.value) state.value = config.value;
+              Object.keys(config).forEach(key => {
+                if (config[key] !== undefined && config[key] !== null) {
+                  window.localStorage.setItem(key, config[key]);
+                }
+              });
+            }}
+          />
+        </div>
+
         <div style={{ marginTop: '30px' }}>
           <WalletManager
             currentAddress={state.address}
@@ -837,6 +890,15 @@ class Signer extends React.Component {
           <TransactionHistory
             currentNetwork={state.selectedNetwork}
             currentAddress={state.address}
+          />
+        </div>
+
+        <div style={{ marginTop: '30px' }}>
+          <SettingsManager
+            onImport={() => {
+              // Reload after import
+              window.location.reload();
+            }}
           />
         </div>
 
