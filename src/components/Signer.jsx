@@ -1,27 +1,36 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action } from 'mobx';
-import { Form, FormGroup, FormControl, Button, Col, ControlLabel, Alert, ButtonGroup } from 'react-bootstrap';
+import {
+  Form, FormGroup, FormControl, Button, Col, ControlLabel, Alert, ButtonGroup,
+} from 'react-bootstrap';
 
-import { getQueryParameterByName }  from "../utils";
-import AccountInfo from "./AccountInfo";
-import TransactionData from "./TransactionData";
-import TransactionPreview from "./TransactionPreview";
-import TransactionHistory from "./TransactionHistory";
-import WalletManager from "./WalletManager";
-import NetworkSelector from "./NetworkSelector";
-import ABILoader from "./ABILoader";
-import CopyButton from "./CopyButton";
-import QRCodeModal from "./QRCodeModal";
-import TemplateManager from "./TemplateManager";
-import SettingsManager from "./SettingsManager";
-import LoadingSpinner from "./LoadingSpinner";
-import { API } from "../etherscan";
-import { saveTransaction } from "../transactionHistory";
-import { getAddressFromPrivateKey, buildTx, calculateNonce, encodeDataPayload } from "../txbuilder";
-import { getDefaultNetwork, getNetworkById } from "../networks";
-import { validateAddress, validatePrivateKey, validateHex, validateGasLimit, validateFunctionSignature } from "../validation";
-import { estimateGasLimit, getGasPriceSuggestions, calculateTransactionCost } from "../gasEstimator";
+import { getQueryParameterByName } from '../utils';
+import AccountInfo from './AccountInfo';
+import TransactionData from './TransactionData';
+import TransactionPreview from './TransactionPreview';
+import TransactionHistory from './TransactionHistory';
+import WalletManager from './WalletManager';
+import NetworkSelector from './NetworkSelector';
+import ABILoader from './ABILoader';
+import CopyButton from './CopyButton';
+import QRCodeModal from './QRCodeModal';
+import TemplateManager from './TemplateManager';
+import SettingsManager from './SettingsManager';
+import LoadingSpinner from './LoadingSpinner';
+import { API } from '../etherscan';
+import { saveTransaction } from '../transactionHistory';
+import {
+  getAddressFromPrivateKey, buildTx, calculateNonce, encodeDataPayload,
+} from '../txbuilder';
+import { getDefaultNetwork, getNetworkById } from '../networks';
+import {
+  validateAddress, validatePrivateKey, validateHex, validateGasLimit,
+  validateFunctionSignature,
+} from '../validation';
+import {
+  estimateGasLimit, getGasPriceSuggestions, calculateTransactionCost,
+} from '../gasEstimator';
 import Web3 from 'web3';
 
 const web3 = new Web3();
@@ -34,42 +43,45 @@ const web3 = new Web3();
 class Signer extends React.Component {
 
   constructor(props) {
-
     super(props);
 
     // Fetch signer state from URL/localStorage on app init
     const url = window.location.href;
-    const privateKey = getQueryParameterByName("privateKey", url) || window.localStorage.getItem("privateKey") || "";
+    const privateKey = getQueryParameterByName('privateKey', url) ||
+      window.localStorage.getItem('privateKey') || '';
 
     // Initialize network
     const defaultNetwork = getDefaultNetwork();
-    const savedApiURL = getQueryParameterByName("apiURL", url) || window.localStorage.getItem("apiURL") || "";
+    const savedApiURL = getQueryParameterByName('apiURL', url) ||
+      window.localStorage.getItem('apiURL') || '';
 
     // Define the state of the signing component
     this.state = observable({
       selectedNetwork: defaultNetwork,
       apiURL: savedApiURL || defaultNetwork.apiURL,
       explorerURL: defaultNetwork.explorerURL,
-      transactionType: window.localStorage.getItem("transactionType") || "contract", // "eth" or "contract"
-      privateKey: privateKey,
-      contractAddress: getQueryParameterByName("contractAddress", url) || window.localStorage.getItem("contractAddress") || "",
-      recipientAddress: window.localStorage.getItem("recipientAddress") || "", // For ETH transfers
-      apiKey: getQueryParameterByName("apiKey", url) || window.localStorage.getItem("apiKey") || "",
-      functionSignature: window.localStorage.getItem("functionSignature") || "",
-      functionParameters: window.localStorage.getItem("functionParameters") || "",
-      gasLimit: window.localStorage.getItem("gasLimit") || "",
-      gasPrice: window.localStorage.getItem("gasPrice") || "",
-      value: window.localStorage.getItem("value") || "0x0",
-      address: getAddressFromPrivateKey(privateKey) || "",
-      balance: "",
-      rawTx: "",
-      nonce: "", // Calculated nonce as int
+      transactionType: window.localStorage.getItem('transactionType') || 'contract',
+      privateKey,
+      contractAddress: getQueryParameterByName('contractAddress', url) ||
+        window.localStorage.getItem('contractAddress') || '',
+      recipientAddress: window.localStorage.getItem('recipientAddress') || '',
+      apiKey: getQueryParameterByName('apiKey', url) ||
+        window.localStorage.getItem('apiKey') || '',
+      functionSignature: window.localStorage.getItem('functionSignature') || '',
+      functionParameters: window.localStorage.getItem('functionParameters') || '',
+      gasLimit: window.localStorage.getItem('gasLimit') || '',
+      gasPrice: window.localStorage.getItem('gasPrice') || '',
+      value: window.localStorage.getItem('value') || '0x0',
+      address: getAddressFromPrivateKey(privateKey) || '',
+      balance: '',
+      rawTx: '',
+      nonce: '', // Calculated nonce as int
       sendStatus: false, // True when send in progress
-      sendError: null, //
+      sendError: null,
       sentTxHash: null, // Point to etherscan.io tx
       baseNonce: 0, // How many txs has gone out from the address
-      nonceOffset: 0, // Maintain internal state of added nonces, because Etherscan getTransactionCount() cannot seem to be able to deal very
-      testnetOffset: 0, // What is the nonce start point for the current network   0x100000
+      nonceOffset: 0, // Maintain internal state of added nonces
+      testnetOffset: 0, // What is the nonce start point for the current network
       // Validation states
       addressValidation: { valid: true, error: null },
       privateKeyValidation: { valid: true, error: null },
@@ -111,6 +123,14 @@ class Signer extends React.Component {
     this.loadGasPriceSuggestions();
   }
 
+  // Update data about the address after fetched over API
+  @action
+  setAddressData(address, balance, nonce) {
+    this.state.address = address;
+    this.state.balance = balance;
+    this.state.nonce = nonce;
+  }
+
   // Load gas price suggestions
   @action
   async loadGasPriceSuggestions() {
@@ -137,13 +157,16 @@ class Signer extends React.Component {
     try {
       let data = '0x';
       if (this.state.functionSignature && this.state.functionParameters) {
-        data = encodeDataPayload(this.state.functionSignature, this.state.functionParameters);
+        data = encodeDataPayload(
+          this.state.functionSignature,
+          this.state.functionParameters,
+        );
       }
 
-      const targetAddress = this.state.transactionType === 'eth' 
-        ? this.state.recipientAddress 
+      const targetAddress = this.state.transactionType === 'eth'
+        ? this.state.recipientAddress
         : this.state.contractAddress;
-      
+
       if (!targetAddress) {
         this.state.gasEstimateError = 'Target address required';
         this.state.estimatingGas = false;
@@ -155,8 +178,8 @@ class Signer extends React.Component {
         apiKey: this.state.apiKey,
         from: this.state.address,
         to: targetAddress,
-        data: data,
-        value: this.state.value || '0x0'
+        data,
+        value: this.state.value || '0x0',
       });
 
       if (result.error) {
@@ -167,7 +190,7 @@ class Signer extends React.Component {
         this.state.gasLimitValidation = validateGasLimit(result.gasLimit);
       }
     } catch (e) {
-      this.state.gasEstimateError = 'Gas estimation failed: ' + e.message;
+      this.state.gasEstimateError = `Gas estimation failed: ${e.message}`;
     } finally {
       this.state.estimatingGas = false;
     }
@@ -211,6 +234,9 @@ class Signer extends React.Component {
           this.state.functionSignatureValidation = { valid: true, error: null };
         }
         break;
+      default:
+        // No validation needed for other fields
+        break;
     }
   }
 
@@ -226,12 +252,12 @@ class Signer extends React.Component {
   @action
   sendTransaction() {
     const updateAddressData = this.updateAddressData.bind(this);
-    let state = this.state;
+    const { state } = this;
 
     state.sentTxHash = null;
     state.sendError = null;
 
-    async function _send() {
+    const sendTx = async () => {
       state.sendStatus = true;
       const api = new API(state.apiURL, state.apiKey);
 
@@ -243,39 +269,43 @@ class Signer extends React.Component {
         }
 
         if (!gasPrice) {
-          throw new Error("Gas price is required. Please provide it or ensure API key and URL are set.");
+          throw new Error(
+            'Gas price is required. Please provide it or ensure API key and URL are set.',
+          );
         }
 
         if (!state.gasLimit) {
-          throw new Error("Gas limit is required.");
+          throw new Error('Gas limit is required.');
         }
 
         // Validate before sending
         if (!state.addressValidation.valid) {
-          throw new Error(
-            state.transactionType === 'eth' 
-              ? "Invalid recipient address: " + state.addressValidation.error
-              : "Invalid contract address: " + state.addressValidation.error
-          );
+          const errorMsg = state.transactionType === 'eth'
+            ? `Invalid recipient address: ${state.addressValidation.error}`
+            : `Invalid contract address: ${state.addressValidation.error}`;
+          throw new Error(errorMsg);
         }
-        
+
         if (state.transactionType === 'eth' && (!state.value || state.value === '0x0')) {
-          throw new Error("ETH amount is required for ETH transfer");
+          throw new Error('ETH amount is required for ETH transfer');
         }
         if (!state.privateKeyValidation.valid) {
-          throw new Error("Invalid private key: " + state.privateKeyValidation.error);
+          throw new Error(`Invalid private key: ${state.privateKeyValidation.error}`);
         }
         if (!state.gasLimitValidation.valid) {
-          throw new Error("Invalid gas limit: " + state.gasLimitValidation.error);
+          throw new Error(`Invalid gas limit: ${state.gasLimitValidation.error}`);
         }
 
         // Determine target address based on transaction type
-        const targetAddress = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
-        
+        const targetAddress = state.transactionType === 'eth'
+          ? state.recipientAddress
+          : state.contractAddress;
+
         if (!targetAddress) {
-          throw new Error(state.transactionType === 'eth' 
-            ? "Recipient address is required for ETH transfer"
-            : "Contract address is required for contract call");
+          const errorMsg = state.transactionType === 'eth'
+            ? 'Recipient address is required for ETH transfer'
+            : 'Contract address is required for contract call';
+          throw new Error(errorMsg);
         }
 
         // Build transaction with fetched/provided values
@@ -285,20 +315,25 @@ class Signer extends React.Component {
           nonce: state.nonce,
           functionSignature: state.transactionType === 'eth' ? null : state.functionSignature,
           functionParameters: state.transactionType === 'eth' ? null : state.functionParameters,
-          value: state.value || "0x0",
+          value: state.value || '0x0',
           gasLimit: state.gasLimit,
-          gasPrice: gasPrice,
+          gasPrice,
         };
 
         state.rawTx = buildTx(txParams);
         state.showPreview = true;
         state.sentTxHash = await api.sendRaw(state.rawTx);
-        console.log("Transaction sent, hash", state.sentTxHash);
+        // eslint-disable-next-line no-console
+        console.log('Transaction sent, hash', state.sentTxHash);
         state.nonceOffset += 1;
 
         // Save to transaction history
-        const txValue = state.value && state.value !== '0x0' ? web3.fromWei(state.value, 'ether') : '0';
-        const targetAddr = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
+        const txValue = state.value && state.value !== '0x0'
+          ? web3.fromWei(state.value, 'ether')
+          : '0';
+        const targetAddr = state.transactionType === 'eth'
+          ? state.recipientAddress
+          : state.contractAddress;
         saveTransaction({
           hash: state.sentTxHash,
           from: state.address,
@@ -310,57 +345,50 @@ class Signer extends React.Component {
           gasLimit: state.gasLimit,
           gasPrice: state.gasPrice,
         });
-      } catch(e) {
-        state.sendError = "" + e;
+      } catch (e) {
+        state.sendError = String(e);
+        // eslint-disable-next-line no-console
         console.log(e);
       }
 
       await updateAddressData();
       state.sendStatus = false;
-    }
+    };
 
     // Sent tx offline
-    if(state.apiKey && state.apiURL) {
-      _send();
+    if (state.apiKey && state.apiURL) {
+      sendTx();
     } else {
-      state.sendError = "API key and API URL are required to send transactions.";
+      state.sendError = 'API key and API URL are required to send transactions.';
     }
   }
 
-  // Update data about the address after fetched over API
-  @action
-  setAddressData(address, balance, nonce) {
-    this.state.address = address;
-    this.state.balance = balance;
-    this.state.nonce = nonce;
-  }
-
-  // Update the Ethereum address balanc from etherscan.io API
+  // Update the Ethereum address balance from etherscan.io API
   async updateAddressData() {
+    const { state } = this;
+    const address = getAddressFromPrivateKey(state.privateKey);
 
-    let state = this.state;
-    let address = getAddressFromPrivateKey(state.privateKey);
+    // eslint-disable-next-line no-console
+    console.log('Address for private key', state.privateKey, 'is', state.address);
 
-    console.log("Address for private key", state.privateKey, "is", state.address);
-
-    if(!address) {
-      this.setAddressData("Could not resolve address", "", "");
+    if (!address) {
+      this.setAddressData('Could not resolve address', '', '');
       return;
-    } else {
-      state.address = address;
     }
+    state.address = address;
 
-    console.log("Updating address information for", address, state);
+    // eslint-disable-next-line no-console
+    console.log('Updating address information for', address, state);
 
-    if(!address || !state.apiKey) {
+    if (!address || !state.apiKey) {
       // No address available
       return;
     }
     const api = new API(state.apiURL, state.apiKey);
-    const balance = await api.getBalance(address) || "";
+    const balance = await api.getBalance(address) || '';
 
-    state.baseNonce = await api.getTransactionCount(address) || "";
-    if(state.baseNonce) {
+    state.baseNonce = await api.getTransactionCount(address) || '';
+    if (state.baseNonce) {
       state.baseNonce = parseInt(state.baseNonce, 16);
     }
 
@@ -371,13 +399,14 @@ class Signer extends React.Component {
 
   // Handle text changes in input fields
   onChange(event) {
-    let state = this.state;
-    let name = event.target.id;
-    let value = event.target.value;
+    const { state } = this;
+    const name = event.target.id;
+    const value = event.target.value;
 
     // Update state
     state[name] = value;
-    console.log("Updated", name, value);
+    // eslint-disable-next-line no-console
+    console.log('Updated', name, value);
 
     // Validate field
     this.validateField(name, value);
@@ -386,7 +415,8 @@ class Signer extends React.Component {
     window.localStorage.setItem(name, value);
 
     // Build preview if we have enough data
-    if (state.contractAddress && state.functionSignature && state.gasLimit && state.gasPrice) {
+    if (state.contractAddress && state.functionSignature &&
+        state.gasLimit && state.gasPrice) {
       this.buildTransactionPreview();
     }
   }
