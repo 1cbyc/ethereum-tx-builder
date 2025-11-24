@@ -1,6 +1,6 @@
 import React from 'react';
 import Signer from './Signer';
-import { Header, Navbar, Alert, Tabs, Tab, Grid, Row, Col } from 'react-bootstrap';
+import { Navbar, Grid, Row, Col } from 'react-bootstrap';
 import logo from '../../images/logo.svg';
 import { getTheme, setTheme, applyTheme } from '../theme';
 
@@ -36,8 +36,7 @@ class App extends React.Component {
         </button>
         <Row>
           <Col md={12}>
-
-              <header>
+            <header>
                 <Navbar>
                   <Navbar.Header>
                     <Navbar.Brand>
@@ -51,9 +50,8 @@ class App extends React.Component {
                     </Navbar.Brand>
                   </Navbar.Header>
                 </Navbar>
-              </header>
-
-           </Col>
+            </header>
+          </Col>
         </Row>
 
         <Row>
