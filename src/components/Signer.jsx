@@ -490,8 +490,8 @@ class Signer extends React.Component {
     return (
       <Form horizontal>
 
-        <NetworkSelector 
-          selectedNetwork={state.selectedNetwork} 
+        <NetworkSelector
+          selectedNetwork={state.selectedNetwork}
           onNetworkChange={handleNetworkChange}
         />
 
@@ -512,9 +512,9 @@ class Signer extends React.Component {
             Private key
           </Col>
           <Col sm={10}>
-            <FormControl 
-              type="text" 
-              value={state.privateKey} 
+            <FormControl
+              type="text"
+              value={state.privateKey}
               onChange={onPrivateKeyChange}
               className={state.privateKeyValidation.valid ? '' : 'has-error'}
             />
