@@ -28,26 +28,24 @@ export async function estimateGasLimit({ apiURL, apiKey, from, to, data, value =
   }
 
   try {
-    const api = new API(apiURL, apiKey);
-    
     // Use Etherscan's eth_estimateGas proxy method
     const params = {
       apikey: apiKey,
       module: 'proxy',
       action: 'eth_estimateGas',
-      to: to,
-      from: from,
-      value: value,
+      to,
+      from,
+      value,
       data: data || '0x',
     };
 
     // Build query string
     const esc = encodeURIComponent;
     const query = Object.keys(params)
-      .map(k => esc(k) + '=' + esc(params[k]))
+      .map(k => `${esc(k)}=${esc(params[k])}`)
       .join('&');
 
-    const response = await fetch(apiURL + "?" + query);
+    const response = await fetch(`${apiURL}?${query}`);
     const result = await response.json();
 
     if (result.error) {
@@ -58,12 +56,12 @@ export async function estimateGasLimit({ apiURL, apiKey, from, to, data, value =
       // Add 20% buffer for safety
       const estimated = parseInt(result.result, 16);
       const buffered = Math.floor(estimated * 1.2);
-      return { gasLimit: '0x' + buffered.toString(16), error: null };
+      return { gasLimit: `0x${buffered.toString(16)}`, error: null };
     }
 
     return { gasLimit: null, error: 'No gas estimate returned' };
   } catch (e) {
-    return { gasLimit: null, error: 'Gas estimation error: ' + e.message };
+    return { gasLimit: null, error: `Gas estimation error: ${e.message}` };
   }
 }
 
@@ -82,9 +80,9 @@ export function calculateTransactionCost(gasLimit, gasPrice) {
     const gwei = web3.fromWei(price.toString(), 'gwei');
 
     return {
-      wei: '0x' + wei.toString(16),
+      wei: `0x${wei.toString(16)}`,
       eth: eth.toString(),
-      gwei: parseFloat(gwei).toFixed(2)
+      gwei: parseFloat(gwei).toFixed(2),
     };
   } catch (e) {
     return { wei: '0x0', eth: '0', gwei: '0' };
@@ -105,18 +103,18 @@ export async function getGasPriceSuggestions(apiURL, apiKey) {
   try {
     const api = new API(apiURL, apiKey);
     const currentGasPrice = await api.getGasPrice();
-    
+
     if (!currentGasPrice) {
       return { slow: null, standard: null, fast: null, error: 'Could not fetch gas price' };
     }
 
     const basePrice = parseInt(currentGasPrice, 16);
-    
+
     return {
-      slow: '0x' + Math.floor(basePrice * 0.9).toString(16),
+      slow: `0x${Math.floor(basePrice * 0.9).toString(16)}`,
       standard: currentGasPrice,
-      fast: '0x' + Math.floor(basePrice * 1.1).toString(16),
-      error: null
+      fast: `0x${Math.floor(basePrice * 1.1).toString(16)}`,
+      error: null,
     };
   } catch (e) {
     return { slow: null, standard: null, fast: null, error: e.message };
