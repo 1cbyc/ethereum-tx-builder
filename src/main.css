@@ -93,12 +93,17 @@ body {
 .navbar-header {
   width: 100%;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .navbar-brand {
   float: none;
-  display: inline-block;
-  margin: 0 auto;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
   padding: 0;
 }
 
@@ -107,16 +112,18 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 12px;
+  white-space: nowrap;
 }
 
 .logo-container .logo {
-  height: 50px;
+  height: 45px;
   width: auto;
-  max-width: 50px;
+  max-width: 45px;
   margin: 0;
   filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));
   transition: transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .logo-container:hover .logo {
@@ -124,18 +131,26 @@ body {
 }
 
 .logo-text {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
   margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .navbar-brand:hover .logo-text {
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transform: scale(1.02);
+}
+
+.navbar-brand {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Dark Theme Styles */
