@@ -1,12 +1,10 @@
 import React from 'react';
-import { observer } from 'mobx-react';
 import Signer from './Signer';
 import { Header, Navbar, Alert, Tabs, Tab, Grid, Row, Col } from 'react-bootstrap';
 import logo from '../../images/logo.svg';
 import { getTheme, setTheme, applyTheme } from '../theme';
 
 
-@observer
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -26,9 +24,6 @@ class App extends React.Component {
   }
 
   render() {
-
-    let store = this.store;
-
     return (
 
       <Grid>
