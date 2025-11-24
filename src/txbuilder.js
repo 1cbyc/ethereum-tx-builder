@@ -1,19 +1,19 @@
-import Wallet from "ethers-wallet";
-import {simpleEncode} from "ethereumjs-abi";
+import Wallet from 'ethers-wallet';
+import { simpleEncode } from 'ethereumjs-abi';
 
 /**
  * Get an Ethereum public address from a private key.
  *
- * @param privateKey Private key as 32 bytes hexadecimal string starting 0x
- *
- * @return 0x hexadecimal address or null if the private key is invalid.
+ * @param {string} privateKey - Private key as 32 bytes hexadecimal string starting with 0x
+ * @returns {string|null} 0x hexadecimal address or null if the private key is invalid
  */
 export function getAddressFromPrivateKey(privateKey) {
   try {
-    let wallet = new Wallet(privateKey);
+    const wallet = new Wallet(privateKey);
     return wallet.address;
   } catch (e) {
-    console.error("Could not parse private key ", privateKey, e);
+    // eslint-disable-next-line no-console
+    console.error('Could not parse private key', privateKey, e);
     return null;
   }
 }
@@ -21,9 +21,10 @@ export function getAddressFromPrivateKey(privateKey) {
 /**
  * Calculate the nonce for the next outbound transaction from the address.
  *
- * @param txCount How many tx the address has sent
- * @param testnetOffset 0 for Ropsten, used to be a thing for the old test network.
- * @param internalOffset Always increase +1 when sends a tx
+ * @param {number} txCount - How many transactions the address has sent
+ * @param {number} testnetOffset - Offset for testnet (0 for most networks)
+ * @param {number} internalOffset - Internal offset, always increase +1 when sending a tx
+ * @returns {number} Calculated nonce value
  */
 export function calculateNonce(txCount, testnetOffset, internalOffset) {
   return txCount + testnetOffset + internalOffset;
@@ -33,77 +34,86 @@ export function calculateNonce(txCount, testnetOffset, internalOffset) {
 /**
  * Create data field based on smart contract function signature and arguments.
  *
- * @param functionSignature E.g. setValue(uint256)
- * @param functionParameters E.g. A comma separated string. Eg. 200,300
- * @returns {string} 0x prefixed hex string
+ * @param {string} functionSignature - Function signature, e.g., "setValue(uint256)"
+ * @param {string} functionParameters - Comma-separated parameter values, e.g., "200,300"
+ * @returns {string} 0x prefixed hex string representing the encoded function call
+ * @throws {Error} If function signature or parameters are invalid
  */
 export function encodeDataPayload(functionSignature, functionParameters) {
-
-  if(typeof functionSignature != "string") {
-    throw new Error("Bad function signature: " + functionSignature);
+  if (typeof functionSignature !== 'string') {
+    throw new Error(`Bad function signature: ${functionSignature}`);
   }
 
-  if(typeof functionParameters != "string") {
-    throw new Error("Bad function parameter: " + functionSignature);
+  if (typeof functionParameters !== 'string') {
+    throw new Error(`Bad function parameter: ${functionSignature}`);
   }
 
   // Construct function call data payload using ethereumjs-abi
   // https://github.com/ethereumjs/ethereumjs-abi
-  const params = functionParameters.split(",").filter((x) => x.trim());
+  const params = functionParameters.split(',').filter(x => x.trim());
   const signatureArgs = [functionSignature].concat(params);
-  return "0x" + simpleEncode.apply(this, signatureArgs).toString("hex");
+  return `0x${simpleEncode.apply(this, signatureArgs).toString('hex')}`;
 }
 
 /**
- * Build a raw transaction calling a contract function.
+ * Build a raw signed transaction for contract function calls or ETH transfers.
  *
- * @param contractAddress Contracts's address as hexadecimal string
- * @param privateKey Private key as 0x prefixed hexadecimal
- * @param nonce Must be incremented by 1 for each transaction
- * @param functionSignature E.g. setValue(uint)
- * @param functionParameters E.g. 2000
- * @param value as hexadecimal string of wei (optional)
- * @param gasLimit as a stringed number (optional)
- * @param gasPrice as a stringed number (optional)
+ * @param {object} params - Transaction parameters
+ * @param {string} params.contractAddress - Contract address (or recipient for ETH transfers)
+ * @param {string} params.privateKey - Private key as 0x prefixed hexadecimal
+ * @param {number} params.nonce - Transaction nonce (must increment for each tx)
+ * @param {string|null} params.functionSignature - Function signature, e.g., "setValue(uint256)"
+ * @param {string|null} params.functionParameters - Function parameters as comma-separated string
+ * @param {string} params.value - Value in wei as hexadecimal string (default: "0x0")
+ * @param {string} params.gasLimit - Gas limit as hexadecimal string
+ * @param {string} params.gasPrice - Gas price in wei as hexadecimal string
+ * @returns {string} Raw signed transaction as hexadecimal string
+ * @throws {Error} If required parameters are missing or invalid
  */
-export function buildTx({contractAddress, privateKey, nonce, functionSignature, functionParameters, value, gasLimit, gasPrice}) {
-
-  let wallet = new Wallet(privateKey);
+export function buildTx({
+  contractAddress,
+  privateKey,
+  nonce,
+  functionSignature,
+  functionParameters,
+  value,
+  gasLimit,
+  gasPrice,
+}) {
+  const wallet = new Wallet(privateKey);
 
   if (!gasLimit) {
-    throw new Error("Gas limit is required.");
+    throw new Error('Gas limit is required.');
   }
 
-  if (value === undefined) {
-    value = "0x0";
-  }
+  const txValue = value === undefined ? '0x0' : value;
 
   if (!gasPrice) {
-    throw new Error("Gas price is required.");
+    throw new Error('Gas price is required.');
   }
 
   if (nonce === undefined) {
-    throw new Error("Cannot send a transaction without a nonce.")
+    throw new Error('Cannot send a transaction without a nonce.');
   }
 
   let data;
-  if(functionSignature && functionParameters) {
+  if (functionSignature && functionParameters) {
     data = encodeDataPayload(functionSignature, functionParameters);
   } else {
     data = undefined;
   }
 
   const txData = {
-    nonce: nonce,
+    nonce,
     to: contractAddress,
-    gasLimit: gasLimit,
-    gasPrice: gasPrice,
-    value: value,
-    data: data,
+    gasLimit,
+    gasPrice,
+    value: txValue,
+    data,
   };
 
-  // Sign transactions
-  let tx = wallet.sign(txData);
+  // Sign transaction using ethers-wallet
+  const tx = wallet.sign(txData);
 
   return tx;
 }
