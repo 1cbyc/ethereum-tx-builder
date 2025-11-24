@@ -121,7 +121,7 @@ if (TARGET === 'build') {
       vendor: Object.keys(pkg.dependencies),
     },
     output: {
-      path: PATHS.build,
+      path: PATHS.dist,
       // filename: '[name].js',
       // Create a hash for each file in the build so we can detect which files have changed
       filename: '[name].[chunkhash].js',
