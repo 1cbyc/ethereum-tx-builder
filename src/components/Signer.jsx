@@ -8,6 +8,7 @@ import AccountInfo from "./AccountInfo";
 import TransactionData from "./TransactionData";
 import TransactionPreview from "./TransactionPreview";
 import TransactionHistory from "./TransactionHistory";
+import WalletManager from "./WalletManager";
 import NetworkSelector from "./NetworkSelector";
 import ABILoader from "./ABILoader";
 import { API } from "../etherscan";
@@ -411,10 +412,19 @@ class Signer extends React.Component {
     }
   }
 
-  // Handle private kery edit
+  // Handle private key edit
   onPrivateKeyChange(event) {
     let state = this.state;
     this.onChange(event);
+    this.updateAddressData();
+  }
+
+  // Handle wallet selection from wallet manager
+  @action
+  handleWalletSelect(wallet) {
+    this.state.privateKey = wallet.privateKey;
+    this.state.address = wallet.address;
+    window.localStorage.setItem('privateKey', wallet.privateKey);
     this.updateAddressData();
   }
 
@@ -786,6 +796,13 @@ class Signer extends React.Component {
         {state.rawTx && <TransactionData state={state} />}
 
         <AccountInfo state={state} />
+
+        <div style={{ marginTop: '30px' }}>
+          <WalletManager
+            currentAddress={state.address}
+            onWalletSelect={this.handleWalletSelect.bind(this)}
+          />
+        </div>
 
         <div style={{ marginTop: '30px' }}>
           <TransactionHistory
