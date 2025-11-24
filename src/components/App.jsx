@@ -41,10 +41,7 @@ class App extends React.Component {
                   <Navbar.Header>
                     <Navbar.Brand>
                       <div className="logo-container">
-                        <div className="logo-badge">
-                          <img className="logo" src={logo} alt="Ethereum TX Builder Logo" />
-                          <span className="badge-text">TXBuilder</span>
-                        </div>
+                        <img className="logo" src={logo} alt="Ethereum TX Builder" />
                         <span className="logo-text">Ethereum TX Builder</span>
                       </div>
                     </Navbar.Brand>
