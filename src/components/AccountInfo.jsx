@@ -1,8 +1,10 @@
 import React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action } from 'mobx';
-import { Form, FormGroup, FormControl, Button, Col, ControlLabel } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Button, Col, ControlLabel, ButtonToolbar } from 'react-bootstrap';
 import { calculateNonce } from "../txbuilder";
+import CopyButton from "./CopyButton";
+import QRCodeModal from "./QRCodeModal";
 
 @observer
 class AccountInfo extends React.Component {
@@ -10,6 +12,9 @@ class AccountInfo extends React.Component {
   constructor({state}) {
     super();
     this.state = state;
+    this.localState = {
+      showQRCode: false,
+    };
   }
 
   componentDidMount() {
@@ -41,12 +46,26 @@ class AccountInfo extends React.Component {
           </Col>
 
           <Col sm={10}>
-            <FormControl type="text" value={state.address} disabled />
-
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <FormControl type="text" value={state.address} disabled style={{ flex: 1 }} />
+              <CopyButton text={state.address} label="address" />
+              <Button
+                bsSize="small"
+                onClick={() => this.localState.showQRCode = true; this.forceUpdate();}
+              >
+                QR
+              </Button>
+            </div>
             <p className="text-muted">
               Address from the private key. &nbsp;
               <a target="_blank" href={"https://testnet.etherscan.io/address/" + state.address}>View on EtherScan.io</a>.
             </p>
+            <QRCodeModal
+              show={this.localState.showQRCode}
+              onHide={() => { this.localState.showQRCode = false; this.forceUpdate(); }}
+              data={state.address}
+              title="Address QR Code"
+            />
           </Col>
 
         </FormGroup>
