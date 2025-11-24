@@ -4,8 +4,13 @@ import React from 'react';
  * Loading spinner component
  */
 function LoadingSpinner({ size, text }) {
-  const spinnerSize = size === 'sm' ? '20px' : size === 'lg' ? '60px' : '40px';
-  
+  let spinnerSize = '40px';
+  if (size === 'sm') {
+    spinnerSize = '20px';
+  } else if (size === 'lg') {
+    spinnerSize = '60px';
+  }
+
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
       <div
