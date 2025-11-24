@@ -111,6 +111,14 @@ class Signer extends React.Component {
     init();
   }
 
+  // Update data about the address after fetched over API
+  @action
+  setAddressData(address, balance, nonce) {
+    this.state.address = address;
+    this.state.balance = balance;
+    this.state.nonce = nonce;
+  }
+
   // Handle network change
   @action
   handleNetworkChange(network) {
@@ -121,14 +129,6 @@ class Signer extends React.Component {
     window.localStorage.setItem('selectedNetwork', network.id);
     this.updateAddressData();
     this.loadGasPriceSuggestions();
-  }
-
-  // Update data about the address after fetched over API
-  @action
-  setAddressData(address, balance, nonce) {
-    this.state.address = address;
-    this.state.balance = balance;
-    this.state.nonce = nonce;
   }
 
   // Load gas price suggestions
@@ -563,9 +563,9 @@ class Signer extends React.Component {
                 Contract address
               </Col>
               <Col sm={10}>
-                <FormControl 
-                  type="text" 
-                  value={state.contractAddress} 
+                <FormControl
+                  type="text"
+                  value={state.contractAddress}
                   onChange={onChange}
                   className={state.addressValidation.valid ? '' : 'has-error'}
                 />
@@ -575,11 +575,14 @@ class Signer extends React.Component {
                   </span>
                 )}
                 {state.contractAddress && state.addressValidation.valid && (
-                <p className="text-muted">
-                    <a target="_blank" href={`${state.explorerURL}/address/${state.contractAddress}`}>
+                  <p className="text-muted">
+                    <a
+                      target="_blank"
+                      href={`${state.explorerURL}/address/${state.contractAddress}`}
+                    >
                       View the contract on Explorer
                     </a>
-                </p>
+                  </p>
                 )}
               </Col>
             </FormGroup>
@@ -592,9 +595,9 @@ class Signer extends React.Component {
               Recipient address
             </Col>
             <Col sm={10}>
-              <FormControl 
-                type="text" 
-                value={state.recipientAddress} 
+              <FormControl
+                type="text"
+                value={state.recipientAddress}
                 onChange={(e) => {
                   state.recipientAddress = e.target.value;
                   window.localStorage.setItem('recipientAddress', e.target.value);
@@ -613,7 +616,10 @@ class Signer extends React.Component {
               )}
               {state.recipientAddress && state.addressValidation.valid && (
                 <p className="text-muted">
-                  <a target="_blank" href={`${state.explorerURL}/address/${state.recipientAddress}`}>
+                  <a
+                    target="_blank"
+                    href={`${state.explorerURL}/address/${state.recipientAddress}`}
+                  >
                     View address on Explorer
                   </a>
                 </p>
@@ -624,36 +630,43 @@ class Signer extends React.Component {
 
         {state.transactionType === 'contract' && (
           <div>
-
-        <FormGroup controlId="functionSignature">
-          <Col componentClass={ControlLabel} sm={2}>
-            Function signature
-          </Col>
-          <Col sm={10}>
-            <FormControl 
-              type="text" 
-              value={state.functionSignature} 
-              onChange={onChange}
-              className={state.functionSignatureValidation.valid ? '' : 'has-error'}
-              placeholder="e.g., setValue(uint256)"
-            />
-            {state.functionSignatureValidation.error && (
-              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
-                {state.functionSignatureValidation.error}
-              </span>
-            )}
-            <p className="text-muted">
-              Function name and parameter types. See examples in <a target="_blank" href="https://github.com/ethereumjs/ethereumjs-abi">ethereumjs-abi</a>.
-            </p>
-          </Col>
-        </FormGroup>
+            <FormGroup controlId="functionSignature">
+              <Col componentClass={ControlLabel} sm={2}>
+                Function signature
+              </Col>
+              <Col sm={10}>
+                <FormControl
+                  type="text"
+                  value={state.functionSignature}
+                  onChange={onChange}
+                  className={state.functionSignatureValidation.valid ? '' : 'has-error'}
+                  placeholder="e.g., setValue(uint256)"
+                />
+                {state.functionSignatureValidation.error && (
+                  <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                    {state.functionSignatureValidation.error}
+                  </span>
+                )}
+                <p className="text-muted">
+                  Function name and parameter types. See examples in{' '}
+                  <a target="_blank" href="https://github.com/ethereumjs/ethereumjs-abi">
+                    ethereumjs-abi
+                  </a>.
+                </p>
+              </Col>
+            </FormGroup>
 
             <FormGroup controlId="functionParameters">
               <Col componentClass={ControlLabel} sm={2}>
                 Function parameters
               </Col>
               <Col sm={10}>
-                <FormControl type="text" value={state.functionParameters} onChange={onChange} placeholder="e.g., 100,200" />
+                <FormControl
+                  type="text"
+                  value={state.functionParameters}
+                  onChange={onChange}
+                  placeholder="e.g., 100,200"
+                />
                 <p className="text-muted">Comma separated list of parameter values</p>
               </Col>
             </FormGroup>
@@ -665,9 +678,11 @@ class Signer extends React.Component {
             Value (ETH)
           </Col>
           <Col sm={10}>
-            <FormControl 
-              type="text" 
-              value={state.value === '0x0' || !state.value ? '' : web3.fromWei(state.value, 'ether')} 
+            <FormControl
+              type="text"
+              value={state.value === '0x0' || !state.value
+                ? ''
+                : web3.fromWei(state.value, 'ether')}
               onChange={(e) => {
                 const ethValue = e.target.value;
                 if (!ethValue || ethValue === '') {
@@ -675,17 +690,21 @@ class Signer extends React.Component {
                 } else {
                   try {
                     const weiValue = web3.toWei(ethValue, 'ether');
-                    state.value = '0x' + parseInt(weiValue).toString(16);
+                    state.value = `0x${parseInt(weiValue, 10).toString(16)}`;
                   } catch (err) {
                     // Invalid value, keep as is
                   }
                 }
                 window.localStorage.setItem('value', state.value);
-              }} 
-              placeholder={state.transactionType === 'eth' ? "Amount to send" : "0 (leave empty for 0)"}
+              }}
+              placeholder={
+                state.transactionType === 'eth'
+                  ? 'Amount to send'
+                  : '0 (leave empty for 0)'
+              }
             />
             <p className="text-muted">
-              {state.transactionType === 'eth' 
+              {state.transactionType === 'eth'
                 ? 'Amount of ETH to send to the recipient address'
                 : 'Amount of ETH to send with transaction (optional, for payable functions)'}
             </p>
@@ -698,16 +717,16 @@ class Signer extends React.Component {
           </Col>
           <Col sm={10}>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <FormControl 
-                type="text" 
-                value={state.gasLimit} 
-                onChange={onChange} 
+              <FormControl
+                type="text"
+                value={state.gasLimit}
+                onChange={onChange}
                 placeholder="0x300000"
                 className={state.gasLimitValidation.valid ? '' : 'has-error'}
                 style={{ flex: 1 }}
               />
-              <Button 
-                bsSize="small" 
+              <Button
+                bsSize="small"
                 onClick={estimateGas}
                 disabled={!canEstimateGas || state.estimatingGas}
               >
@@ -724,7 +743,9 @@ class Signer extends React.Component {
                 {state.gasEstimateError}
               </span>
             )}
-            <p className="text-muted">Maximum gas to use (hex format). Click Estimate to auto-calculate.</p>
+            <p className="text-muted">
+              Maximum gas to use (hex format). Click Estimate to auto-calculate.
+            </p>
           </Col>
         </FormGroup>
 
@@ -733,43 +754,51 @@ class Signer extends React.Component {
             Gas price
           </Col>
           <Col sm={10}>
-            <FormControl 
-              type="text" 
-              value={state.gasPrice} 
-              onChange={onChange} 
+            <FormControl
+              type="text"
+              value={state.gasPrice}
+              onChange={onChange}
               placeholder="Leave empty to fetch from network"
               className={state.gasPriceValidation.valid ? '' : 'has-error'}
             />
             {state.gasPriceSuggestions.standard && (
               <div style={{ marginTop: '10px' }}>
                 <ButtonGroup>
-                  <Button 
-                    bsSize="small" 
+                  <Button
+                    bsSize="small"
                     onClick={() => {
                       state.gasPrice = state.gasPriceSuggestions.slow;
-                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.slow}});
+                      onChange({ target: { id: 'gasPrice', value: state.gasPriceSuggestions.slow } });
                     }}
                   >
-                    Slow ({state.gasPriceSuggestions.slow ? (parseInt(state.gasPriceSuggestions.slow, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
+                    Slow ({state.gasPriceSuggestions.slow
+                      ? `${(parseInt(state.gasPriceSuggestions.slow, 16) / 1e9).toFixed(2)} Gwei`
+                      : ''})
                   </Button>
-                  <Button 
-                    bsSize="small" 
+                  <Button
+                    bsSize="small"
                     bsStyle="primary"
                     onClick={() => {
                       state.gasPrice = state.gasPriceSuggestions.standard;
-                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.standard}});
+                      onChange({
+                        target: { id: 'gasPrice', value: state.gasPriceSuggestions.standard },
+                      });
                     }}
                   >
-                    Standard ({state.gasPriceSuggestions.standard ? (parseInt(state.gasPriceSuggestions.standard, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
+                    Standard ({state.gasPriceSuggestions.standard
+                      ? `${(parseInt(state.gasPriceSuggestions.standard, 16) / 1e9).toFixed(2)} Gwei`
+                      : ''})
                   </Button>
-                  <Button 
-                    bsSize="small" 
+                  <Button
+                    bsSize="small"
                     onClick={() => {
                       state.gasPrice = state.gasPriceSuggestions.fast;
-                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.fast}});
+                      onChange({ target: { id: 'gasPrice', value: state.gasPriceSuggestions.fast } });
                     }}
                   >
-                    Fast ({state.gasPriceSuggestions.fast ? (parseInt(state.gasPriceSuggestions.fast, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
+                    Fast ({state.gasPriceSuggestions.fast
+                      ? `${(parseInt(state.gasPriceSuggestions.fast, 16) / 1e9).toFixed(2)} Gwei`
+                      : ''})
                   </Button>
                 </ButtonGroup>
               </div>
@@ -779,15 +808,19 @@ class Signer extends React.Component {
                 {state.gasPriceValidation.error}
               </span>
             )}
-            <p className="text-muted">Gas price in wei (hex format). Leave empty to fetch current gas price from network.</p>
+            <p className="text-muted">
+              Gas price in wei (hex format). Leave empty to fetch current gas price from network.
+            </p>
           </Col>
         </FormGroup>
 
-        {state.gasLimit && state.gasPrice && state.gasLimitValidation.valid && state.gasPriceValidation.valid && (
+        {state.gasLimit && state.gasPrice && state.gasLimitValidation.valid &&
+          state.gasPriceValidation.valid && (
           <FormGroup>
             <Col smOffset={2} sm={10}>
               <Alert bsStyle="info">
-                <strong>Estimated Cost:</strong> {calculateTransactionCost(state.gasLimit, state.gasPrice).eth} ETH
+                <strong>Estimated Cost:</strong>{' '}
+                {calculateTransactionCost(state.gasLimit, state.gasPrice).eth} ETH
                 {state.balance && (
                   <span> | Balance: {state.balance} ETH</span>
                 )}
@@ -802,8 +835,8 @@ class Signer extends React.Component {
 
         <FormGroup>
           <Col smOffset={2} sm={10}>
-            <Button 
-              bsStyle="primary" 
+            <Button
+              bsStyle="primary"
               onClick={sendTransaction}
               disabled={!canSend || state.sendStatus}
               bsSize="large"
@@ -828,7 +861,15 @@ class Signer extends React.Component {
             <Col smOffset={2} sm={10}>
               <Alert bsStyle="success">
                 <strong>Transaction Sent!</strong>{' '}
-                <div style={{ marginTop: '10px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div
+                  style={{
+                    marginTop: '10px',
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <code style={{ fontSize: '12px' }}>{state.sentTxHash}</code>
                   <CopyButton text={state.sentTxHash} label="transaction hash" bsSize="small" />
                   <Button
@@ -917,7 +958,7 @@ class Signer extends React.Component {
         <div style={{ marginTop: '30px' }}>
           <WalletManager
             currentAddress={state.address}
-            onWalletSelect={this.handleWalletSelect.bind(this)}
+            onWalletSelect={(wallet) => { this.handleWalletSelect(wallet); }}
           />
         </div>
 
