@@ -24,9 +24,11 @@ export function getTheme() {
 export function setTheme(theme) {
   try {
     window.localStorage.setItem(THEME_KEY, theme);
+    // eslint-disable-next-line no-use-before-define
     applyTheme(theme);
     return true;
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error('Error setting theme:', e);
     return false;
   }
