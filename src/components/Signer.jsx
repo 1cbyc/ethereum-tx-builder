@@ -491,8 +491,21 @@ class Signer extends React.Component {
           <Col sm={10}>
             <FormControl 
               type="text" 
-              value={state.value === '0x0' ? '' : state.value} 
-              onChange={onChange} 
+              value={state.value === '0x0' || !state.value ? '' : web3.fromWei(state.value, 'ether')} 
+              onChange={(e) => {
+                const ethValue = e.target.value;
+                if (!ethValue || ethValue === '') {
+                  state.value = '0x0';
+                } else {
+                  try {
+                    const weiValue = web3.toWei(ethValue, 'ether');
+                    state.value = '0x' + parseInt(weiValue).toString(16);
+                  } catch (err) {
+                    // Invalid value, keep as is
+                  }
+                }
+                window.localStorage.setItem('value', state.value);
+              }} 
               placeholder="0 (leave empty for 0)"
             />
             <p className="text-muted">Amount of ETH to send with transaction (optional, for payable functions)</p>
@@ -552,22 +565,31 @@ class Signer extends React.Component {
                 <ButtonGroup>
                   <Button 
                     bsSize="small" 
-                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.slow; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.slow}}); }}
+                    onClick={() => {
+                      state.gasPrice = state.gasPriceSuggestions.slow;
+                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.slow}});
+                    }}
                   >
-                    Slow ({this.state.gasPriceSuggestions.slow ? parseInt(this.state.gasPriceSuggestions.slow, 16) / 1e9 + ' Gwei' : ''})
+                    Slow ({state.gasPriceSuggestions.slow ? (parseInt(state.gasPriceSuggestions.slow, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
                   </Button>
                   <Button 
                     bsSize="small" 
                     bsStyle="primary"
-                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.standard; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.standard}}); }}
+                    onClick={() => {
+                      state.gasPrice = state.gasPriceSuggestions.standard;
+                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.standard}});
+                    }}
                   >
-                    Standard ({this.state.gasPriceSuggestions.standard ? parseInt(this.state.gasPriceSuggestions.standard, 16) / 1e9 + ' Gwei' : ''})
+                    Standard ({state.gasPriceSuggestions.standard ? (parseInt(state.gasPriceSuggestions.standard, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
                   </Button>
                   <Button 
                     bsSize="small" 
-                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.fast; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.fast}}); }}
+                    onClick={() => {
+                      state.gasPrice = state.gasPriceSuggestions.fast;
+                      onChange({target: {id: 'gasPrice', value: state.gasPriceSuggestions.fast}});
+                    }}
                   >
-                    Fast ({this.state.gasPriceSuggestions.fast ? parseInt(this.state.gasPriceSuggestions.fast, 16) / 1e9 + ' Gwei' : ''})
+                    Fast ({state.gasPriceSuggestions.fast ? (parseInt(state.gasPriceSuggestions.fast, 16) / 1e9).toFixed(2) + ' Gwei' : ''})
                   </Button>
                 </ButtonGroup>
               </div>
