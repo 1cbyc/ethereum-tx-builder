@@ -1,0 +1,17 @@
+├── src/
+│   ├── components/          # React components
+│   │   ├── App.jsx          # Main app wrapper
+│   │   ├── Signer.jsx      # Main transaction builder UI
+│   │   ├── AccountInfo.jsx # Display account balance/nonce
+│   │   └── TransactionData.jsx # Show raw transaction
+│   ├── txbuilder.js         # Core transaction building logic
+│   ├── offlinetx.js         # CLI tool for transaction signing
+│   ├── etherscan.js         # Etherscan API wrapper
+│   ├── utils.js             # Utility functions
+│   └── main.css             # Styles
+├── contracts/
+│   ├── SampleContract.sol   # Sample smart contract
+│   ├── deploy.js            # Contract deployment script
+│   └── contracts.json       # Compiled contract ABI/bytecode
+├── tests/                   # Test scripts
+└── webpack.config.js        # Build configuration
