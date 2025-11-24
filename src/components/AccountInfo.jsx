@@ -51,7 +51,10 @@ class AccountInfo extends React.Component {
               <CopyButton text={state.address} label="address" />
               <Button
                 bsSize="small"
-                onClick={() => this.localState.showQRCode = true; this.forceUpdate();}
+                onClick={() => {
+                  this.localState.showQRCode = true;
+                  this.forceUpdate();
+                }}
               >
                 QR
               </Button>
