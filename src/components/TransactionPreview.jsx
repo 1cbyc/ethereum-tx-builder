@@ -9,7 +9,11 @@ const web3 = new Web3();
  * Transaction preview component showing decoded transaction details
  */
 function TransactionPreview({ state }) {
-  if (!state.rawTx || !state.contractAddress) {
+  const targetAddress = state.transactionType === 'eth' 
+    ? state.recipientAddress 
+    : state.contractAddress;
+  
+  if (!state.rawTx || !targetAddress) {
     return null;
   }
 
@@ -50,22 +54,24 @@ function TransactionPreview({ state }) {
             <tr>
               <td><strong>To</strong></td>
               <td>
-                <code>{state.contractAddress}</code>
+                <code>{targetAddress}</code>
                 <a
-                  href={`${explorerURL}/address/${state.contractAddress}`}
+                  href={`${explorerURL}/address/${targetAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ marginLeft: '10px' }}
                 >
-                  View Contract
+                  {state.transactionType === 'eth' ? 'View Address' : 'View Contract'}
                 </a>
               </td>
             </tr>
-            <tr>
-              <td><strong>Function</strong></td>
-              <td><code>{state.functionSignature || 'ETH Transfer'}</code></td>
-            </tr>
-            {decodedParams.length > 0 && (
+            {state.transactionType === 'contract' && (
+              <tr>
+                <td><strong>Function</strong></td>
+                <td><code>{state.functionSignature || 'N/A'}</code></td>
+              </tr>
+            )}
+            {state.transactionType === 'contract' && decodedParams.length > 0 && (
               <tr>
                 <td><strong>Parameters</strong></td>
                 <td>
