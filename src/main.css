@@ -3,6 +3,84 @@
 
 
 body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 15px 0;
+  }
+
+  .logo-text {
+    font-size: 24px;
+  }
+
+  .badge-text {
+    font-size: 14px;
+  }
+
+  .logo-container .logo {
+    height: 30px;
+    max-width: 30px;
+  }
+
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .form-horizontal .control-label {
+    text-align: left;
+    margin-bottom: 5px;
+  }
+
+  .form-horizontal .form-group {
+    margin-bottom: 15px;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .btn-group .btn {
+    width: auto;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  code {
+    font-size: 10px;
+    word-break: break-all;
+  }
+
+  .panel {
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .badge-text {
+    font-size: 12px;
+  }
+
+  .logo-container {
+    gap: 8px;
+  }
+
+  .logo-badge {
+    padding: 6px 12px;
+  }
 }
 
 .navbar {
