@@ -425,19 +425,23 @@ class Signer extends React.Component {
   @action
   buildTransactionPreview() {
     try {
-      const targetAddress = this.state.transactionType === 'eth' 
-        ? this.state.recipientAddress 
+      const targetAddress = this.state.transactionType === 'eth'
+        ? this.state.recipientAddress
         : this.state.contractAddress;
-      
-      if (targetAddress && this.state.privateKey && this.state.nonce !== undefined && 
+
+      if (targetAddress && this.state.privateKey && this.state.nonce !== undefined &&
           this.state.gasLimit && this.state.gasPrice) {
         const txParams = {
           contractAddress: targetAddress,
           privateKey: this.state.privateKey,
           nonce: this.state.nonce,
-          functionSignature: this.state.transactionType === 'eth' ? null : this.state.functionSignature,
-          functionParameters: this.state.transactionType === 'eth' ? null : this.state.functionParameters,
-          value: this.state.value || "0x0",
+          functionSignature: this.state.transactionType === 'eth'
+            ? null
+            : this.state.functionSignature,
+          functionParameters: this.state.transactionType === 'eth'
+            ? null
+            : this.state.functionParameters,
+          value: this.state.value || '0x0',
           gasLimit: this.state.gasLimit,
           gasPrice: this.state.gasPrice,
         };
@@ -452,7 +456,6 @@ class Signer extends React.Component {
 
   // Handle private key edit
   onPrivateKeyChange(event) {
-    let state = this.state;
     this.onChange(event);
     this.updateAddressData();
   }
@@ -467,20 +470,22 @@ class Signer extends React.Component {
   }
 
   render() {
+    const { state } = this;
+    const onPrivateKeyChange = (e) => { this.onPrivateKeyChange(e); };
+    const onChange = (e) => { this.onChange(e); };
+    const sendTransaction = () => { this.sendTransaction(); };
+    const handleNetworkChange = (network) => { this.handleNetworkChange(network); };
+    const estimateGas = () => { this.estimateGas(); };
+    const handleFunctionSelect = (func) => { this.handleFunctionSelect(func); };
 
-    const state = this.state;
-    const onPrivateKeyChange = this.onPrivateKeyChange.bind(this);
-    const onChange = this.onChange.bind(this);
-    const sendTransaction = this.sendTransaction.bind(this);
-    const handleNetworkChange = this.handleNetworkChange.bind(this);
-    const estimateGas = this.estimateGas.bind(this);
-    const handleFunctionSelect = this.handleFunctionSelect.bind(this);
-
-    const targetAddress = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
+    const targetAddress = state.transactionType === 'eth'
+      ? state.recipientAddress
+      : state.contractAddress;
     const canEstimateGas = targetAddress && state.address && state.apiKey && state.apiURL;
-    const canSend = state.addressValidation.valid && state.privateKeyValidation.valid && 
+    const canSend = state.addressValidation.valid && state.privateKeyValidation.valid &&
                     state.gasLimitValidation.valid && state.gasLimit && state.gasPrice &&
-                    targetAddress && (state.transactionType === 'eth' ? state.value !== '0x0' : true);
+                    targetAddress &&
+                    (state.transactionType === 'eth' ? state.value !== '0x0' : true);
 
     return (
       <Form horizontal>
