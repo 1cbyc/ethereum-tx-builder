@@ -10,10 +10,10 @@ const web3 = new Web3();
  * Transaction preview component showing decoded transaction details
  */
 function TransactionPreview({ state }) {
-  const targetAddress = state.transactionType === 'eth' 
-    ? state.recipientAddress 
+  const targetAddress = state.transactionType === 'eth'
+    ? state.recipientAddress
     : state.contractAddress;
-  
+
   if (!state.rawTx || !targetAddress) {
     return null;
   }
@@ -41,7 +41,13 @@ function TransactionPreview({ state }) {
             <tr>
               <td><strong>From</strong></td>
               <td>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
+                >
                   <code>{state.address}</code>
                   <CopyButton text={state.address} label="address" bsSize="small" />
                   <a
@@ -57,7 +63,13 @@ function TransactionPreview({ state }) {
             <tr>
               <td><strong>To</strong></td>
               <td>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
+                >
                   <code>{targetAddress}</code>
                   <CopyButton text={targetAddress} label="address" bsSize="small" />
                   <a
