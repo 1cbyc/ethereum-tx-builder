@@ -37,6 +37,9 @@ export function setTheme(theme) {
  * @param {string} theme - 'light' or 'dark'
  */
 export function applyTheme(theme) {
+  if (typeof window === 'undefined' || !document || !document.documentElement) {
+    return;
+  }
   const root = document.documentElement;
   if (theme === 'dark') {
     root.classList.add('dark-theme');
@@ -47,8 +50,15 @@ export function applyTheme(theme) {
   }
 }
 
-// Apply theme on load
+// Apply theme on DOM ready
 if (typeof window !== 'undefined') {
-  applyTheme(getTheme());
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(getTheme());
+    });
+  } else {
+    // DOM already loaded
+    applyTheme(getTheme());
+  }
 }
 
