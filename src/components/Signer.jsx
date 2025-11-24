@@ -7,9 +7,11 @@ import { getQueryParameterByName }  from "../utils";
 import AccountInfo from "./AccountInfo";
 import TransactionData from "./TransactionData";
 import TransactionPreview from "./TransactionPreview";
+import TransactionHistory from "./TransactionHistory";
 import NetworkSelector from "./NetworkSelector";
 import ABILoader from "./ABILoader";
 import { API } from "../etherscan";
+import { saveTransaction } from "../transactionHistory";
 import { getAddressFromPrivateKey, buildTx, calculateNonce, encodeDataPayload } from "../txbuilder";
 import { getDefaultNetwork } from "../networks";
 import { validateAddress, validatePrivateKey, validateHex, validateGasLimit, validateFunctionSignature } from "../validation";
@@ -36,7 +38,7 @@ class Signer extends React.Component {
     // Initialize network
     const defaultNetwork = getDefaultNetwork();
     const savedApiURL = getQueryParameterByName("apiURL", url) || window.localStorage.getItem("apiURL") || "";
-    
+
     // Define the state of the signing component
     this.state = observable({
       selectedNetwork: defaultNetwork,
@@ -255,6 +257,20 @@ class Signer extends React.Component {
         state.sentTxHash = await api.sendRaw(state.rawTx);
         console.log("Transaction sent, hash", state.sentTxHash);
         state.nonceOffset += 1;
+
+        // Save to transaction history
+        const txValue = state.value && state.value !== '0x0' ? web3.fromWei(state.value, 'ether') : '0';
+        saveTransaction({
+          hash: state.sentTxHash,
+          from: state.address,
+          to: state.contractAddress,
+          network: state.selectedNetwork.id,
+          explorerURL: state.explorerURL,
+          functionSignature: state.functionSignature,
+          value: txValue,
+          gasLimit: state.gasLimit,
+          gasPrice: state.gasPrice,
+        });
       } catch(e) {
         state.sendError = "" + e;
         console.log(e);
@@ -440,11 +456,11 @@ class Signer extends React.Component {
               </span>
             )}
             {state.contractAddress && state.addressValidation.valid && (
-              <p className="text-muted">
+            <p className="text-muted">
                 <a target="_blank" href={`${state.explorerURL}/address/${state.contractAddress}`}>
                   View the contract on Explorer
                 </a>
-              </p>
+            </p>
             )}
           </Col>
         </FormGroup>
@@ -659,6 +675,13 @@ class Signer extends React.Component {
         {state.rawTx && <TransactionData state={state} />}
 
         <AccountInfo state={state} />
+
+        <div style={{ marginTop: '30px' }}>
+          <TransactionHistory
+            currentNetwork={state.selectedNetwork}
+            currentAddress={state.address}
+          />
+        </div>
 
       </Form>
     );
