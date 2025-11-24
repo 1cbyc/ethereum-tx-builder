@@ -44,8 +44,10 @@ class Signer extends React.Component {
       selectedNetwork: defaultNetwork,
       apiURL: savedApiURL || defaultNetwork.apiURL,
       explorerURL: defaultNetwork.explorerURL,
+      transactionType: window.localStorage.getItem("transactionType") || "contract", // "eth" or "contract"
       privateKey: privateKey,
       contractAddress: getQueryParameterByName("contractAddress", url) || window.localStorage.getItem("contractAddress") || "",
+      recipientAddress: window.localStorage.getItem("recipientAddress") || "", // For ETH transfers
       apiKey: getQueryParameterByName("apiKey", url) || window.localStorage.getItem("apiKey") || "",
       functionSignature: window.localStorage.getItem("functionSignature") || "",
       functionParameters: window.localStorage.getItem("functionParameters") || "",
@@ -129,11 +131,21 @@ class Signer extends React.Component {
         data = encodeDataPayload(this.state.functionSignature, this.state.functionParameters);
       }
 
+      const targetAddress = this.state.transactionType === 'eth' 
+        ? this.state.recipientAddress 
+        : this.state.contractAddress;
+      
+      if (!targetAddress) {
+        this.state.gasEstimateError = 'Target address required';
+        this.state.estimatingGas = false;
+        return;
+      }
+
       const result = await estimateGasLimit({
         apiURL: this.state.apiURL,
         apiKey: this.state.apiKey,
         from: this.state.address,
-        to: this.state.contractAddress,
+        to: targetAddress,
         data: data,
         value: this.state.value || '0x0'
       });
@@ -231,7 +243,15 @@ class Signer extends React.Component {
 
         // Validate before sending
         if (!state.addressValidation.valid) {
-          throw new Error("Invalid contract address: " + state.addressValidation.error);
+          throw new Error(
+            state.transactionType === 'eth' 
+              ? "Invalid recipient address: " + state.addressValidation.error
+              : "Invalid contract address: " + state.addressValidation.error
+          );
+        }
+        
+        if (state.transactionType === 'eth' && (!state.value || state.value === '0x0')) {
+          throw new Error("ETH amount is required for ETH transfer");
         }
         if (!state.privateKeyValidation.valid) {
           throw new Error("Invalid private key: " + state.privateKeyValidation.error);
@@ -240,13 +260,22 @@ class Signer extends React.Component {
           throw new Error("Invalid gas limit: " + state.gasLimitValidation.error);
         }
 
+        // Determine target address based on transaction type
+        const targetAddress = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
+        
+        if (!targetAddress) {
+          throw new Error(state.transactionType === 'eth' 
+            ? "Recipient address is required for ETH transfer"
+            : "Contract address is required for contract call");
+        }
+
         // Build transaction with fetched/provided values
         const txParams = {
-          contractAddress: state.contractAddress,
+          contractAddress: targetAddress,
           privateKey: state.privateKey,
           nonce: state.nonce,
-          functionSignature: state.functionSignature,
-          functionParameters: state.functionParameters,
+          functionSignature: state.transactionType === 'eth' ? null : state.functionSignature,
+          functionParameters: state.transactionType === 'eth' ? null : state.functionParameters,
           value: state.value || "0x0",
           gasLimit: state.gasLimit,
           gasPrice: gasPrice,
@@ -260,13 +289,14 @@ class Signer extends React.Component {
 
         // Save to transaction history
         const txValue = state.value && state.value !== '0x0' ? web3.fromWei(state.value, 'ether') : '0';
+        const targetAddr = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
         saveTransaction({
           hash: state.sentTxHash,
           from: state.address,
-          to: state.contractAddress,
+          to: targetAddr,
           network: state.selectedNetwork.id,
           explorerURL: state.explorerURL,
-          functionSignature: state.functionSignature,
+          functionSignature: state.transactionType === 'eth' ? null : state.functionSignature,
           value: txValue,
           gasLimit: state.gasLimit,
           gasPrice: state.gasPrice,
@@ -356,13 +386,18 @@ class Signer extends React.Component {
   @action
   buildTransactionPreview() {
     try {
-      if (this.state.contractAddress && this.state.privateKey && this.state.nonce !== undefined) {
+      const targetAddress = this.state.transactionType === 'eth' 
+        ? this.state.recipientAddress 
+        : this.state.contractAddress;
+      
+      if (targetAddress && this.state.privateKey && this.state.nonce !== undefined && 
+          this.state.gasLimit && this.state.gasPrice) {
         const txParams = {
-          contractAddress: this.state.contractAddress,
+          contractAddress: targetAddress,
           privateKey: this.state.privateKey,
           nonce: this.state.nonce,
-          functionSignature: this.state.functionSignature,
-          functionParameters: this.state.functionParameters,
+          functionSignature: this.state.transactionType === 'eth' ? null : this.state.functionSignature,
+          functionParameters: this.state.transactionType === 'eth' ? null : this.state.functionParameters,
           value: this.state.value || "0x0",
           gasLimit: this.state.gasLimit,
           gasPrice: this.state.gasPrice,
@@ -393,9 +428,11 @@ class Signer extends React.Component {
     const estimateGas = this.estimateGas.bind(this);
     const handleFunctionSelect = this.handleFunctionSelect.bind(this);
 
-    const canEstimateGas = state.contractAddress && state.address && state.apiKey && state.apiURL;
+    const targetAddress = state.transactionType === 'eth' ? state.recipientAddress : state.contractAddress;
+    const canEstimateGas = targetAddress && state.address && state.apiKey && state.apiURL;
     const canSend = state.addressValidation.valid && state.privateKeyValidation.valid && 
-                    state.gasLimitValidation.valid && state.gasLimit && state.gasPrice;
+                    state.gasLimitValidation.valid && state.gasLimit && state.gasPrice &&
+                    targetAddress && (state.transactionType === 'eth' ? state.value !== '0x0' : true);
 
     return (
       <Form horizontal>
@@ -439,33 +476,101 @@ class Signer extends React.Component {
           </Col>
         </FormGroup>
 
-        <FormGroup controlId="contractAddress">
+        <FormGroup controlId="transactionType">
           <Col componentClass={ControlLabel} sm={2}>
-            Contract address
+            Transaction Type
           </Col>
           <Col sm={10}>
-            <FormControl 
-              type="text" 
-              value={state.contractAddress} 
-              onChange={onChange}
-              className={state.addressValidation.valid ? '' : 'has-error'}
-            />
-            {state.addressValidation.error && (
-              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
-                {state.addressValidation.error}
-              </span>
-            )}
-            {state.contractAddress && state.addressValidation.valid && (
+            <FormControl
+              componentClass="select"
+              value={state.transactionType}
+              onChange={(e) => {
+                state.transactionType = e.target.value;
+                window.localStorage.setItem('transactionType', e.target.value);
+                if (e.target.value === 'eth') {
+                  state.contractAddress = '';
+                  state.functionSignature = '';
+                  state.functionParameters = '';
+                }
+              }}
+            >
+              <option value="contract">Contract Call</option>
+              <option value="eth">ETH Transfer</option>
+            </FormControl>
             <p className="text-muted">
-                <a target="_blank" href={`${state.explorerURL}/address/${state.contractAddress}`}>
-                  View the contract on Explorer
-                </a>
+              Choose between calling a smart contract function or sending ETH directly.
             </p>
-            )}
           </Col>
         </FormGroup>
 
-        <ABILoader onFunctionSelect={handleFunctionSelect} />
+        {state.transactionType === 'contract' ? (
+          <div>
+            <FormGroup controlId="contractAddress">
+              <Col componentClass={ControlLabel} sm={2}>
+                Contract address
+              </Col>
+              <Col sm={10}>
+                <FormControl 
+                  type="text" 
+                  value={state.contractAddress} 
+                  onChange={onChange}
+                  className={state.addressValidation.valid ? '' : 'has-error'}
+                />
+                {state.addressValidation.error && (
+                  <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                    {state.addressValidation.error}
+                  </span>
+                )}
+                {state.contractAddress && state.addressValidation.valid && (
+                <p className="text-muted">
+                    <a target="_blank" href={`${state.explorerURL}/address/${state.contractAddress}`}>
+                      View the contract on Explorer
+                    </a>
+                </p>
+                )}
+              </Col>
+            </FormGroup>
+
+            <ABILoader onFunctionSelect={handleFunctionSelect} />
+          </div>
+        ) : (
+          <FormGroup controlId="recipientAddress">
+            <Col componentClass={ControlLabel} sm={2}>
+              Recipient address
+            </Col>
+            <Col sm={10}>
+              <FormControl 
+                type="text" 
+                value={state.recipientAddress} 
+                onChange={(e) => {
+                  state.recipientAddress = e.target.value;
+                  window.localStorage.setItem('recipientAddress', e.target.value);
+                  const validation = validateAddress(e.target.value);
+                  state.addressValidation = validation;
+                  if (validation.checksummed) {
+                    state.recipientAddress = validation.checksummed;
+                  }
+                }}
+                className={state.addressValidation.valid ? '' : 'has-error'}
+              />
+              {state.addressValidation.error && (
+                <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                  {state.addressValidation.error}
+                </span>
+              )}
+              {state.recipientAddress && state.addressValidation.valid && (
+                <p className="text-muted">
+                  <a target="_blank" href={`${state.explorerURL}/address/${state.recipientAddress}`}>
+                    View address on Explorer
+                  </a>
+                </p>
+              )}
+            </Col>
+          </FormGroup>
+        )}
+
+        {state.transactionType === 'contract' && (
+          <div>
 
         <FormGroup controlId="functionSignature">
           <Col componentClass={ControlLabel} sm={2}>
@@ -490,15 +595,17 @@ class Signer extends React.Component {
           </Col>
         </FormGroup>
 
-        <FormGroup controlId="functionParameters">
-          <Col componentClass={ControlLabel} sm={2}>
-            Function parameters
-          </Col>
-          <Col sm={10}>
-            <FormControl type="text" value={state.functionParameters} onChange={onChange} placeholder="e.g., 100,200" />
-            <p className="text-muted">Comma separated list of parameter values</p>
-          </Col>
-        </FormGroup>
+            <FormGroup controlId="functionParameters">
+              <Col componentClass={ControlLabel} sm={2}>
+                Function parameters
+              </Col>
+              <Col sm={10}>
+                <FormControl type="text" value={state.functionParameters} onChange={onChange} placeholder="e.g., 100,200" />
+                <p className="text-muted">Comma separated list of parameter values</p>
+              </Col>
+            </FormGroup>
+          </div>
+        )}
 
         <FormGroup controlId="value">
           <Col componentClass={ControlLabel} sm={2}>
@@ -522,9 +629,13 @@ class Signer extends React.Component {
                 }
                 window.localStorage.setItem('value', state.value);
               }} 
-              placeholder="0 (leave empty for 0)"
+              placeholder={state.transactionType === 'eth' ? "Amount to send" : "0 (leave empty for 0)"}
             />
-            <p className="text-muted">Amount of ETH to send with transaction (optional, for payable functions)</p>
+            <p className="text-muted">
+              {state.transactionType === 'eth' 
+                ? 'Amount of ETH to send to the recipient address'
+                : 'Amount of ETH to send with transaction (optional, for payable functions)'}
+            </p>
           </Col>
         </FormGroup>
 
