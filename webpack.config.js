@@ -17,7 +17,7 @@ const PATHS = {
 
 const common = {
   entry: {
-    src: PATHS.src,
+    src: ['babel-polyfill', PATHS.src],
     style: PATHS.style,
   },
   resolve: {
