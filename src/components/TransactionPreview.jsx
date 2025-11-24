@@ -1,5 +1,5 @@
 import React from 'react';
-import { Panel, Table, Label, Col } from 'react-bootstrap';
+import { Panel, Table, Label } from 'react-bootstrap';
 import Web3 from 'web3';
 import { calculateTransactionCost } from '../gasEstimator';
 
@@ -18,12 +18,11 @@ function TransactionPreview({ state }) {
   const cost = calculateTransactionCost(gasLimit, gasPrice);
 
   // Decode function signature if available
-  let functionName = 'Unknown';
   let decodedParams = [];
-  
+
   if (state.functionSignature) {
-    functionName = state.functionSignature.split('(')[0];
-    const params = state.functionParameters ? state.functionParameters.split(',').map(p => p.trim()) : [];
+    const params = state.functionParameters ?
+      state.functionParameters.split(',').map(p => p.trim()) : [];
     decodedParams = params;
   }
 
@@ -38,9 +37,9 @@ function TransactionPreview({ state }) {
               <td><strong>From</strong></td>
               <td>
                 <code>{state.address}</code>
-                <a 
-                  href={`${explorerURL}/address/${state.address}`} 
-                  target="_blank" 
+                <a
+                  href={`${explorerURL}/address/${state.address}`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   style={{ marginLeft: '10px' }}
                 >
@@ -52,9 +51,9 @@ function TransactionPreview({ state }) {
               <td><strong>To</strong></td>
               <td>
                 <code>{state.contractAddress}</code>
-                <a 
-                  href={`${explorerURL}/address/${state.contractAddress}`} 
-                  target="_blank" 
+                <a
+                  href={`${explorerURL}/address/${state.contractAddress}`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   style={{ marginLeft: '10px' }}
                 >
@@ -81,7 +80,7 @@ function TransactionPreview({ state }) {
             <tr>
               <td><strong>Value</strong></td>
               <td>
-                {state.value && state.value !== '0x0' 
+                {state.value && state.value !== '0x0'
                   ? `${web3.fromWei(state.value, 'ether')} ETH`
                   : '0 ETH'
                 }
