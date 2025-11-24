@@ -118,13 +118,18 @@ function TransactionPreview({ state }) {
         
         {state.balance && parseFloat(state.balance) < parseFloat(cost.eth) && (
           <div className="alert alert-danger" style={{ marginTop: '15px' }}>
-            <strong>Warning:</strong> Insufficient balance. You need {cost.eth} ETH but only have {state.balance} ETH.
+            <strong>Warning:</strong> Insufficient balance. You need {cost.eth} ETH but only
+            have {state.balance} ETH.
           </div>
         )}
       </Panel>
     </div>
   );
 }
+
+TransactionPreview.propTypes = {
+  state: React.PropTypes.object.isRequired,
+};
 
 export default TransactionPreview;
 
