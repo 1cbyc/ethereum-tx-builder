@@ -13,16 +13,16 @@ body {
   }
 
   .logo-text {
-    font-size: 24px;
-  }
-
-  .badge-text {
-    font-size: 14px;
+    font-size: 20px;
   }
 
   .logo-container .logo {
-    height: 30px;
-    max-width: 30px;
+    height: 35px;
+    max-width: 35px;
+  }
+
+  .logo-container {
+    gap: 10px;
   }
 
   .theme-toggle {
@@ -67,19 +67,16 @@ body {
 
 @media (max-width: 480px) {
   .logo-text {
-    font-size: 20px;
-  }
-
-  .badge-text {
-    font-size: 12px;
+    font-size: 18px;
   }
 
   .logo-container {
     gap: 8px;
   }
 
-  .logo-badge {
-    padding: 6px 12px;
+  .logo-container .logo {
+    height: 30px;
+    max-width: 30px;
   }
 }
 
@@ -107,69 +104,37 @@ body {
 
 .logo-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-}
-
-.logo-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 8px 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.logo-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 1);
+  gap: 15px;
 }
 
 .logo-container .logo {
-  height: 40px;
+  height: 50px;
   width: auto;
-  max-width: 40px;
+  max-width: 50px;
   margin: 0;
-  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.4));
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));
   transition: transform 0.3s ease;
 }
 
-.logo-container .logo:hover {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.badge-text {
-  font-size: 18px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.5px;
+.logo-container:hover .logo {
+  transform: scale(1.05);
 }
 
 .logo-text {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
+  margin: 0;
 }
 
 .navbar-brand:hover .logo-text {
-  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transform: scale(1.02);
 }
 
