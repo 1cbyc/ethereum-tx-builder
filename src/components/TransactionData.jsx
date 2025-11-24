@@ -6,6 +6,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import { observable, action } from 'mobx';
 import { Form, FormGroup, FormControl, Button, Col, ControlLabel } from 'react-bootstrap';
+import CopyButton from "./CopyButton";
 
 
 function TransactionData({ state }) {
@@ -24,13 +25,16 @@ function TransactionData({ state }) {
           Raw transaction
         </Col>
 
-        <Col sm={10}>
-          <FormControl componentClass="textarea" value={state.rawTx} disabled />
+          <Col sm={10}>
+            <div style={{ marginBottom: '10px' }}>
+              <CopyButton text={state.rawTx} label="raw transaction" />
+            </div>
+            <FormControl componentClass="textarea" value={state.rawTx} disabled rows="4" />
 
-          <p className="text-muted">
-            If you are doing offline signing you can manually copy-paste this transaction to <a href="https://testnet.etherscan.io">pushTx</a>.
-          </p>
-        </Col>
+            <p className="text-muted">
+              If you are doing offline signing you can manually copy-paste this transaction to <a href="https://testnet.etherscan.io">pushTx</a>.
+            </p>
+          </Col>
 
       </FormGroup>
 
