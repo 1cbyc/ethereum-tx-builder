@@ -6,6 +6,7 @@ import { NETWORKS, getNetworkById } from '../networks';
  * Network selector component
  */
 function NetworkSelector({ selectedNetwork, onNetworkChange, validation }) {
+  // Component for network selection
   const handleChange = (event) => {
     const networkId = event.target.value;
     const network = getNetworkById(networkId);
@@ -42,6 +43,12 @@ function NetworkSelector({ selectedNetwork, onNetworkChange, validation }) {
     </FormGroup>
   );
 }
+
+NetworkSelector.propTypes = {
+  selectedNetwork: React.PropTypes.object.isRequired,
+  onNetworkChange: React.PropTypes.func.isRequired,
+  validation: React.PropTypes.object,
+};
 
 export default NetworkSelector;
 
