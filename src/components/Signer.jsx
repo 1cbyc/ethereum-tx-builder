@@ -10,11 +10,13 @@ import TransactionPreview from "./TransactionPreview";
 import NetworkSelector from "./NetworkSelector";
 import ABILoader from "./ABILoader";
 import { API } from "../etherscan";
-import { getAddressFromPrivateKey, buildTx, calculateNonce } from "../txbuilder";
+import { getAddressFromPrivateKey, buildTx, calculateNonce, encodeDataPayload } from "../txbuilder";
 import { getDefaultNetwork } from "../networks";
 import { validateAddress, validatePrivateKey, validateHex, validateGasLimit, validateFunctionSignature } from "../validation";
 import { estimateGasLimit, getGasPriceSuggestions, calculateTransactionCost } from "../gasEstimator";
-import { encodeDataPayload } from "../txbuilder";
+import Web3 from 'web3';
+
+const web3 = new Web3();
 
 
 /**
@@ -371,134 +373,266 @@ class Signer extends React.Component {
     const onPrivateKeyChange = this.onPrivateKeyChange.bind(this);
     const onChange = this.onChange.bind(this);
     const sendTransaction = this.sendTransaction.bind(this);
+    const handleNetworkChange = this.handleNetworkChange.bind(this);
+    const estimateGas = this.estimateGas.bind(this);
+    const handleFunctionSelect = this.handleFunctionSelect.bind(this);
+
+    const canEstimateGas = state.contractAddress && state.address && state.apiKey && state.apiURL;
+    const canSend = state.addressValidation.valid && state.privateKeyValidation.valid && 
+                    state.gasLimitValidation.valid && state.gasLimit && state.gasPrice;
 
     return (
       <Form horizontal>
 
-        <h1>Ethereum TX Builder</h1>
-
-        <FormGroup controlId="apiURL">
-
-          <Col componentClass={ControlLabel} sm={2}>
-            Etherscan API URL
-          </Col>
-
-          <Col sm={10}>
-            <FormControl type="text" value={state.apiURL} onChange={onChange} placeholder="https://api.etherscan.io/api" />
-            <p className="text-muted">
-              Etherscan API base URL (e.g., https://api.etherscan.io/api for mainnet, https://api-ropsten.etherscan.io/api for Ropsten).
-            </p>
-
-          </Col>
-
-        </FormGroup>
+        <NetworkSelector 
+          selectedNetwork={state.selectedNetwork} 
+          onNetworkChange={handleNetworkChange}
+        />
 
         <FormGroup controlId="apiKey">
-
           <Col componentClass={ControlLabel} sm={2}>
             Etherscan.io API key
           </Col>
-
           <Col sm={10}>
             <FormControl type="text" value={state.apiKey} onChange={onChange} />
             <p className="text-muted">
               Sign up on <a target="_blank" href="https://etherscan.io">EtherScan.io</a>.
             </p>
-
           </Col>
-
-        </FormGroup>
-
-        <FormGroup controlId="contractAddress">
-
-          <Col componentClass={ControlLabel} sm={2}>
-            Contract address
-          </Col>
-
-          <Col sm={10}>
-            <FormControl type="text" value={state.contractAddress} onChange={onChange} />
-
-            <p className="text-muted">
-              <a target="_blank" href={"https://testnet.etherscan.io/address/" + state.contractAddress}>View the contract on EtherScan.io</a>.
-            </p>
-
-          </Col>
-
         </FormGroup>
 
         <FormGroup controlId="privateKey">
-
           <Col componentClass={ControlLabel} sm={2}>
             Private key
           </Col>
-
           <Col sm={10}>
-            <FormControl type="text" value={state.privateKey} onChange={onPrivateKeyChange} />
-
+            <FormControl 
+              type="text" 
+              value={state.privateKey} 
+              onChange={onPrivateKeyChange}
+              className={state.privateKeyValidation.valid ? '' : 'has-error'}
+            />
+            {state.privateKeyValidation.error && (
+              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                {state.privateKeyValidation.error}
+              </span>
+            )}
             <p className="text-muted">
-              Derived from a passphrase using sha3() function.
+              Private key (0x + 64 hex characters). Keep this secure!
             </p>
           </Col>
-
         </FormGroup>
 
-        <FormGroup controlId="functionSignature">
+        <FormGroup controlId="contractAddress">
+          <Col componentClass={ControlLabel} sm={2}>
+            Contract address
+          </Col>
+          <Col sm={10}>
+            <FormControl 
+              type="text" 
+              value={state.contractAddress} 
+              onChange={onChange}
+              className={state.addressValidation.valid ? '' : 'has-error'}
+            />
+            {state.addressValidation.error && (
+              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                {state.addressValidation.error}
+              </span>
+            )}
+            {state.contractAddress && state.addressValidation.valid && (
+              <p className="text-muted">
+                <a target="_blank" href={`${state.explorerURL}/address/${state.contractAddress}`}>
+                  View the contract on Explorer
+                </a>
+              </p>
+            )}
+          </Col>
+        </FormGroup>
 
+        <ABILoader onFunctionSelect={handleFunctionSelect} />
+
+        <FormGroup controlId="functionSignature">
           <Col componentClass={ControlLabel} sm={2}>
             Function signature
           </Col>
-
           <Col sm={10}>
-            <FormControl type="text" value={state.functionSignature} onChange={onChange} />
-
+            <FormControl 
+              type="text" 
+              value={state.functionSignature} 
+              onChange={onChange}
+              className={state.functionSignatureValidation.valid ? '' : 'has-error'}
+              placeholder="e.g., setValue(uint256)"
+            />
+            {state.functionSignatureValidation.error && (
+              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                {state.functionSignatureValidation.error}
+              </span>
+            )}
             <p className="text-muted">
-              See examples in <a target="_blank" href="https://github.com/ethereumjs/ethereumjs-abi">ethereumjs-abi</a>.
+              Function name and parameter types. See examples in <a target="_blank" href="https://github.com/ethereumjs/ethereumjs-abi">ethereumjs-abi</a>.
             </p>
           </Col>
-
         </FormGroup>
 
         <FormGroup controlId="functionParameters">
-
           <Col componentClass={ControlLabel} sm={2}>
             Function parameters
           </Col>
-
           <Col sm={10}>
-            <FormControl type="text" value={state.functionParameters} onChange={onChange} />
-            <p className="text-muted">Comma separated list</p>
+            <FormControl type="text" value={state.functionParameters} onChange={onChange} placeholder="e.g., 100,200" />
+            <p className="text-muted">Comma separated list of parameter values</p>
           </Col>
+        </FormGroup>
 
+        <FormGroup controlId="value">
+          <Col componentClass={ControlLabel} sm={2}>
+            Value (ETH)
+          </Col>
+          <Col sm={10}>
+            <FormControl 
+              type="text" 
+              value={state.value === '0x0' ? '' : state.value} 
+              onChange={onChange} 
+              placeholder="0 (leave empty for 0)"
+            />
+            <p className="text-muted">Amount of ETH to send with transaction (optional, for payable functions)</p>
+          </Col>
         </FormGroup>
 
         <FormGroup controlId="gasLimit">
-
           <Col componentClass={ControlLabel} sm={2}>
             Gas limit
           </Col>
-
           <Col sm={10}>
-            <FormControl type="text" value={state.gasLimit} onChange={onChange} placeholder="0x300000" />
-            <p className="text-muted">Maximum gas to use for the transaction (hex format, e.g., 0x300000)</p>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <FormControl 
+                type="text" 
+                value={state.gasLimit} 
+                onChange={onChange} 
+                placeholder="0x300000"
+                className={state.gasLimitValidation.valid ? '' : 'has-error'}
+                style={{ flex: 1 }}
+              />
+              <Button 
+                bsSize="small" 
+                onClick={estimateGas}
+                disabled={!canEstimateGas || state.estimatingGas}
+              >
+                {state.estimatingGas ? 'Estimating...' : 'Estimate'}
+              </Button>
+            </div>
+            {state.gasLimitValidation.error && (
+              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                {state.gasLimitValidation.error}
+              </span>
+            )}
+            {state.gasEstimateError && (
+              <span className="text-warning" style={{ display: 'block', marginTop: '5px' }}>
+                {state.gasEstimateError}
+              </span>
+            )}
+            <p className="text-muted">Maximum gas to use (hex format). Click Estimate to auto-calculate.</p>
           </Col>
-
         </FormGroup>
 
         <FormGroup controlId="gasPrice">
-
           <Col componentClass={ControlLabel} sm={2}>
             Gas price
           </Col>
-
           <Col sm={10}>
-            <FormControl type="text" value={state.gasPrice} onChange={onChange} placeholder="Leave empty to fetch from network" />
+            <FormControl 
+              type="text" 
+              value={state.gasPrice} 
+              onChange={onChange} 
+              placeholder="Leave empty to fetch from network"
+              className={state.gasPriceValidation.valid ? '' : 'has-error'}
+            />
+            {state.gasPriceSuggestions.standard && (
+              <div style={{ marginTop: '10px' }}>
+                <ButtonGroup>
+                  <Button 
+                    bsSize="small" 
+                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.slow; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.slow}}); }}
+                  >
+                    Slow ({this.state.gasPriceSuggestions.slow ? parseInt(this.state.gasPriceSuggestions.slow, 16) / 1e9 + ' Gwei' : ''})
+                  </Button>
+                  <Button 
+                    bsSize="small" 
+                    bsStyle="primary"
+                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.standard; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.standard}}); }}
+                  >
+                    Standard ({this.state.gasPriceSuggestions.standard ? parseInt(this.state.gasPriceSuggestions.standard, 16) / 1e9 + ' Gwei' : ''})
+                  </Button>
+                  <Button 
+                    bsSize="small" 
+                    onClick={() => { this.state.gasPrice = this.state.gasPriceSuggestions.fast; this.onChange({target: {id: 'gasPrice', value: this.state.gasPriceSuggestions.fast}}); }}
+                  >
+                    Fast ({this.state.gasPriceSuggestions.fast ? parseInt(this.state.gasPriceSuggestions.fast, 16) / 1e9 + ' Gwei' : ''})
+                  </Button>
+                </ButtonGroup>
+              </div>
+            )}
+            {state.gasPriceValidation.error && (
+              <span className="text-danger" style={{ display: 'block', marginTop: '5px' }}>
+                {state.gasPriceValidation.error}
+              </span>
+            )}
             <p className="text-muted">Gas price in wei (hex format). Leave empty to fetch current gas price from network.</p>
           </Col>
-
         </FormGroup>
 
-        <Button bsStyle="primary" onClick={sendTransaction}>Send transaction</Button>
+        {state.gasLimit && state.gasPrice && state.gasLimitValidation.valid && state.gasPriceValidation.valid && (
+          <FormGroup>
+            <Col smOffset={2} sm={10}>
+              <Alert bsStyle="info">
+                <strong>Estimated Cost:</strong> {calculateTransactionCost(state.gasLimit, state.gasPrice).eth} ETH
+                {state.balance && (
+                  <span> | Balance: {state.balance} ETH</span>
+                )}
+              </Alert>
+            </Col>
+          </FormGroup>
+        )}
 
+        {state.showPreview && state.rawTx && (
+          <TransactionPreview state={state} />
+        )}
+
+        <FormGroup>
+          <Col smOffset={2} sm={10}>
+            <Button 
+              bsStyle="primary" 
+              onClick={sendTransaction}
+              disabled={!canSend || state.sendStatus}
+              bsSize="large"
+            >
+              {state.sendStatus ? 'Sending...' : 'Send Transaction'}
+            </Button>
+          </Col>
+        </FormGroup>
+
+        {state.sendError && (
+          <FormGroup>
+            <Col smOffset={2} sm={10}>
+              <Alert bsStyle="danger">
+                <strong>Error:</strong> {state.sendError}
+              </Alert>
+            </Col>
+          </FormGroup>
+        )}
+
+        {state.sentTxHash && (
+          <FormGroup>
+            <Col smOffset={2} sm={10}>
+              <Alert bsStyle="success">
+                <strong>Transaction Sent!</strong>{' '}
+                <a target="_blank" href={`${state.explorerURL}/tx/${state.sentTxHash}`}>
+                  View on Explorer: {state.sentTxHash}
+                </a>
+              </Alert>
+            </Col>
+          </FormGroup>
+        )}
 
         {state.rawTx && <TransactionData state={state} />}
 
