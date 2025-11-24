@@ -10,7 +10,7 @@
 export function parseABI(abi) {
   try {
     const abiObj = typeof abi === 'string' ? JSON.parse(abi) : abi;
-    
+
     if (!Array.isArray(abiObj)) {
       return { functions: [], error: 'ABI must be an array' };
     }
@@ -21,21 +21,21 @@ export function parseABI(abi) {
         const inputs = item.inputs || [];
         const inputTypes = inputs.map(input => input.type).join(',');
         const signature = `${item.name}(${inputTypes})`;
-        
+
         return {
           name: item.name,
-          signature: signature,
-          inputs: inputs,
+          signature,
+          inputs,
           outputs: item.outputs || [],
           stateMutability: item.stateMutability || (item.payable ? 'payable' : 'nonpayable'),
           payable: item.payable || false,
-          constant: item.constant || false
+          constant: item.constant || false,
         };
       });
 
     return { functions, error: null };
   } catch (e) {
-    return { functions: [], error: 'Invalid ABI format: ' + e.message };
+    return { functions: [], error: `Invalid ABI format: ${e.message}` };
   }
 }
 
@@ -59,7 +59,7 @@ export function generateParameterFields(inputs) {
     name: input.name || `param${index}`,
     type: input.type,
     required: true,
-    placeholder: `${input.type}${input.name ? ` (${input.name})` : ''}`
+    placeholder: `${input.type}${input.name ? ` (${input.name})` : ''}`,
   }));
 }
 
