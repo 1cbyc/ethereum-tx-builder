@@ -51,14 +51,16 @@ export function applyTheme(theme) {
 }
 
 // Apply theme on DOM ready
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       applyTheme(getTheme());
     });
   } else {
     // DOM already loaded
-    applyTheme(getTheme());
+    setTimeout(() => {
+      applyTheme(getTheme());
+    }, 0);
   }
 }
 
